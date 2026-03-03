@@ -1,0 +1,129 @@
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Rings */
+.ls-rings {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ls-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid transparent;
+}
+
+.ls-ring-1 {
+  width: 200px;
+  height: 200px;
+  border-color: rgba(124, 111, 255, 0.4);
+  border-top-color: var(--accent);
+}
+
+.ls-ring-2 {
+  width: 340px;
+  height: 340px;
+  border-color: rgba(0, 212, 255, 0.2);
+  border-right-color: var(--accent-alt);
+}
+
+.ls-ring-3 {
+  width: 480px;
+  height: 480px;
+  border-color: rgba(167, 139, 250, 0.15);
+  border-bottom-color: #a78bfa;
+}
+
+.ls-ring-4 {
+  width: 620px;
+  height: 620px;
+  border-color: rgba(124, 111, 255, 0.08);
+  border-left-color: rgba(124, 111, 255, 0.4);
+}
+
+/* Particles */
+.ls-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ls-particle {
+  position: absolute;
+  opacity: 0;
+}
+
+/* Center  */
+.ls-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.ls-logo {
+  font-family: 'Fira Code', monospace;
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+  opacity: 0;
+}
+
+.ls-bracket {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ls-counter {
+  font-family: 'Fira Code', monospace;
+  font-size: 3.5rem;
+  font-weight: 900;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  min-width: 130px;
+  text-align: center;
+}
+
+.ls-progress-track {
+  width: 200px;
+  height: 2px;
+  background: rgba(124, 111, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ls-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gradient);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.ls-text {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

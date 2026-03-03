@@ -1,0 +1,233 @@
+.project-panel-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Backdrop */
+.pp-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Panel */
+.pp-panel {
+  position: relative;
+  width: min(520px, 100vw);
+  height: 100vh;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateX(100%);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
+}
+
+.pp-colorbar {
+  height: 3px;
+  flex-shrink: 0;
+}
+
+/* Header */
+.pp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.8rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pp-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.pp-type-badge,
+.pp-status-badge {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.pp-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.pp-status-badge.live {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.pp-status-badge.wip {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.pp-client-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.pp-client-badge svg { font-size: 0.68rem; }
+
+.pp-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.pp-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.pp-close:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+/* Scrollable body */
+.pp-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+
+.pp-body::-webkit-scrollbar { width: 4px; }
+.pp-body::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+.pp-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.pp-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.pp-links {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.pp-link-btn {
+  padding: 10px 20px;
+  font-size: 0.85rem;
+}
+
+.pp-section {}
+
+.pp-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  font-family: 'Fira Code', monospace;
+}
+
+.pp-long-desc {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.85;
+}
+
+.pp-highlights {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.pp-highlights li {
+  display: flex;
+  gap: 0.6rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  align-items: flex-start;
+}
+
+.pp-check {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 0.8rem;
+}
+
+.pp-tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pp-tech-tag {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.78rem;
+  padding: 5px 12px;
+  border-radius: 5px;
+  border: 1px solid;
+  background: transparent;
+  transition: var(--transition);
+}
+
+.pp-tech-tag:hover {
+  opacity: 0.8;
+}
+
+@media (max-width: 540px) {
+  .pp-panel { width: 100vw; }
+}
