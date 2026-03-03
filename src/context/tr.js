@@ -45,7 +45,7 @@ export const tr = {
     modal: {
       techStack: 'Teknoloji Yığını',
       highlights: 'Öne Çıkanlar',
-      github: 'GitHub\'da Gör',
+      github: "GitHub'da Gör",
       live: 'Canlıyı Gör',
       close: 'Kapat',
       status: 'Durum',

@@ -402,12 +402,12 @@ export default function Projects() {
                     </div>
                     <div className="card-links" onClick={(e) => e.stopPropagation()}>
                       {project.github && (
-                        <a href={project.github} target="_blank" rel="noreferrer" aria-label="GitHub">
+                        <a href={project.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                           <FiGithub />
                         </a>
                       )}
                       {project.live && (
-                        <a href={project.live} target="_blank" rel="noreferrer" aria-label="Live">
+                        <a href={project.live} target="_blank" rel="noopener noreferrer" aria-label="Live">
                           <FiExternalLink />
                         </a>
                       )}
@@ -423,7 +423,7 @@ export default function Projects() {
                     )}
                   </div>
                   <div className="card-detail-hint">
-                    <span>Detaylar</span> <FiArrowUpRight />
+                    <span>{lang === 'tr' ? 'Detaylar' : 'Details'}</span> <FiArrowUpRight />
                   </div>
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function Projects() {
           </div>
 
           <div className="projects-footer">
-            <a href="https://github.com/furkanpasaoglu" target="_blank" rel="noreferrer" className="btn btn-outline">
+            <a href="https://github.com/furkanpasaoglu" target="_blank" rel="noopener noreferrer" className="btn btn-outline">
               <FiGithub /> {t.projects.viewGithub}
             </a>
           </div>

@@ -31,7 +31,7 @@ public class Order : BaseEntity
 }` },
       { type: 'heading', text: 'Application Katmanı ve CQRS' },
       { type: 'paragraph', text: 'Application katmanında MediatR ile CQRS pattern\'ini uyguladık. Her use case bir Command veya Query olarak modellendi. Bu sayede okuma ve yazma operasyonları tamamen ayrıştı.' },
-      { type: 'code', lang: 'csharp', text: `// Application Layer — sadece Domain ve abstraction\'lara bağımlı
+      { type: 'code', lang: 'csharp', text: `// Application Layer — sadece Domain ve abstraction'lara bağımlı
 public record CreateOrderCommand(Guid CustomerId, List<OrderItemDto> Items)
     : IRequest<Guid>;
 

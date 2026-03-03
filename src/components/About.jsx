@@ -46,7 +46,7 @@ export default function About() {
             <p className="about-p">{t.about.p3}</p>
             <div className="about-cta-row">
               <a href="#contact" className="btn btn-primary">{t.about.cta1}</a>
-              <a href="/Furkan-Pasaoglu-Senior-Software-Developer-CV.pdf" target="_blank" rel="noreferrer" className="btn btn-outline">{t.about.cta2}</a>
+              <a href="/Furkan-Pasaoglu-Senior-Software-Developer-CV.pdf" target="_blank" rel="noopener noreferrer" className="btn btn-outline">{t.about.cta2}</a>
             </div>
           </div>
 
@@ -66,7 +66,7 @@ export default function About() {
         <div className="about-stats" ref={statsRef}>
           {t.about.stats.map((item, i) => (
             <div key={i} className="stat-card">
-              <div className="stat-icon">{statIcons[i]}</div>
+              <div className="stat-icon" aria-hidden="true">{statIcons[i]}</div>
               <div className="stat-label">{item.label}</div>
               <div className="stat-desc">{item.desc}</div>
             </div>

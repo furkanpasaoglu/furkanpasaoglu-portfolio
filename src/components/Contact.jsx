@@ -53,6 +53,11 @@ export default function Contact() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const subject = encodeURIComponent(`Portfolio Contact from ${formData.name}`);
+    const body = encodeURIComponent(
+      `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+    );
+    window.location.href = `mailto:furkan.pasaoglu99@gmail.com?subject=${subject}&body=${body}`;
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 4000);
     setFormData({ name: '', email: '', message: '' });
@@ -91,7 +96,7 @@ export default function Contact() {
 
             <div className="contact-socials">
               {socials.map((s) => (
-                <a key={s.label} href={s.href} target="_blank" rel="noreferrer" className="social-link" aria-label={s.label}>
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" className="social-link" aria-label={s.label}>
                   <span className="social-icon">{s.icon}</span>
                   <span className="social-label">{s.label}</span>
                 </a>

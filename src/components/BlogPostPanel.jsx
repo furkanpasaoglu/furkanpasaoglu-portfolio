@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { FiX, FiClock, FiTag, FiArrowLeft, FiGithub } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
@@ -11,6 +11,13 @@ export default function BlogPostPanel({ post, onClose }) {
   const { lang, t } = useLang();
 
   const content = blogContent[lang]?.[post.id] || [];
+
+  const handleClose = useCallback(() => {
+    gsap.to(panelRef.current, { x: '100%', duration: 0.4, ease: 'power3.in' });
+    gsap.to(overlayRef.current, {
+      opacity: 0, duration: 0.35, onComplete: onClose,
+    });
+  }, [onClose]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -27,18 +34,11 @@ export default function BlogPostPanel({ post, onClose }) {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, []);
-
-  const handleClose = () => {
-    gsap.to(panelRef.current, { x: '100%', duration: 0.4, ease: 'power3.in' });
-    gsap.to(overlayRef.current, {
-      opacity: 0, duration: 0.35, onComplete: onClose,
-    });
-  };
+  }, [handleClose]);
 
   return (
     <div className="bpp-overlay" ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) handleClose(); }}>
-      <div className="bpp-panel" ref={panelRef}>
+      <div className="bpp-panel" ref={panelRef} role="dialog" aria-modal="true" aria-label={post.title}>
         {/* Panel Header */}
         <div className="bpp-header">
           <button className="bpp-back" onClick={handleClose}>
@@ -112,12 +112,12 @@ export default function BlogPostPanel({ post, onClose }) {
             <a
               href="https://github.com/furkanpasaoglu"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="btn btn-outline"
               style={{ borderColor: post.color, color: post.color }}
             >
               <FiGithub />
-              {lang === 'tr' ? 'GitHub\'da Takip Et' : 'Follow on GitHub'}
+              {lang === 'tr' ? "GitHub'da Takip Et" : 'Follow on GitHub'}
             </a>
           </div>
         </div>

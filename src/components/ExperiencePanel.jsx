@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { FiX, FiBriefcase, FiBookOpen } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
@@ -12,6 +12,14 @@ export default function ExperiencePanel({ exp, onClose }) {
 
   const accentColor = exp.isEducation ? 'var(--accent-alt)' : '#10b981';
   const accentRgb   = exp.isEducation ? '99,179,237' : '16,185,129';
+
+  const handleClose = useCallback(() => {
+    gsap.to(panelRef.current,   { x: '100%', duration: 0.4, ease: 'power3.in' });
+    gsap.to(overlayRef.current, {
+      opacity: 0, duration: 0.4, ease: 'power2.in',
+      onComplete: () => { document.body.style.overflow = ''; onClose(); },
+    });
+  }, [onClose]);
 
   useEffect(() => {
     if (!exp) return;
@@ -31,15 +39,7 @@ export default function ExperiencePanel({ exp, onClose }) {
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [exp]);
-
-  const handleClose = () => {
-    gsap.to(panelRef.current,   { x: '100%', duration: 0.4, ease: 'power3.in' });
-    gsap.to(overlayRef.current, {
-      opacity: 0, duration: 0.4, ease: 'power2.in',
-      onComplete: () => { document.body.style.overflow = ''; onClose(); },
-    });
-  };
+  }, [exp, handleClose]);
 
   if (!exp) return null;
 
@@ -47,7 +47,7 @@ export default function ExperiencePanel({ exp, onClose }) {
     <div className="ep-wrapper">
       <div className="ep-overlay" ref={overlayRef} onClick={handleClose} />
 
-      <div className="ep-panel" ref={panelRef}>
+      <div className="ep-panel" ref={panelRef} role="dialog" aria-modal="true" aria-label={exp.title}>
         {/* Color bar */}
         <div className="ep-colorbar" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
 

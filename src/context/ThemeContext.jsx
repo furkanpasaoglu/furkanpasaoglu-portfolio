@@ -4,7 +4,7 @@ const ThemeContext = createContext(null);
 
 const detectTheme = () => {
   const saved = localStorage.getItem('fp-theme');
-  if (saved) return saved;
+  if (saved === 'dark' || saved === 'light') return saved;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 

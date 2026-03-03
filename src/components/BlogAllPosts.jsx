@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { FiX, FiClock, FiTag, FiArrowRight, FiSearch } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
@@ -23,6 +23,11 @@ export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
     return matchCat && matchSearch;
   });
 
+  const handleClose = useCallback(() => {
+    gsap.to(panelRef.current, { y: 40, opacity: 0, duration: 0.3, ease: 'power3.in' });
+    gsap.to(overlayRef.current, { opacity: 0, duration: 0.35, onComplete: onClose });
+  }, [onClose]);
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
@@ -34,7 +39,7 @@ export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, []);
+  }, [handleClose]);
 
   useEffect(() => {
     const cards = panelRef.current?.querySelectorAll('.bap-card');
@@ -42,14 +47,9 @@ export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
     gsap.fromTo(cards, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, stagger: 0.06, ease: 'power3.out' });
   }, [activeCategory, searchQuery]);
 
-  const handleClose = () => {
-    gsap.to(panelRef.current, { y: 40, opacity: 0, duration: 0.3, ease: 'power3.in' });
-    gsap.to(overlayRef.current, { opacity: 0, duration: 0.35, onComplete: onClose });
-  };
-
   return (
     <div className="bap-overlay" ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) handleClose(); }}>
-      <div className="bap-panel" ref={panelRef}>
+      <div className="bap-panel" ref={panelRef} role="dialog" aria-modal="true" aria-label={t.blog.allPosts}>
         {/* Header */}
         <div className="bap-header">
           <div className="bap-header-left">
@@ -99,7 +99,10 @@ export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
                   key={post.id}
                   className="bap-card"
                   style={{ '--post-color': post.color }}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => { onSelectPost(post); handleClose(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectPost(post); handleClose(); } }}
                 >
                   <div className="bap-card-accent" />
                   <div className="bap-card-body">

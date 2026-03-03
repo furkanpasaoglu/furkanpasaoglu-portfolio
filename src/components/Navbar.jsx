@@ -49,7 +49,7 @@ export default function Navbar() {
             </li>
           ))}
           <li>
-            <a href="/Furkan-Pasaoglu-Senior-Software-Developer-CV.pdf" className="btn-resume" target="_blank" rel="noreferrer">
+            <a href="/Furkan-Pasaoglu-Senior-Software-Developer-CV.pdf" className="btn-resume" target="_blank" rel="noopener noreferrer">
               {t.nav.resume}
             </a>
           </li>

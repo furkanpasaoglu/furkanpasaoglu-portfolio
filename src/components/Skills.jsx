@@ -3,9 +3,10 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   SiDotnet, SiDocker,
-  SiPostgresql, SiMongodb, SiRedis, SiRabbitmq, SiElasticsearch,
-  SiAngular, SiGit, SiJenkins, SiBootstrap, SiJquery, SiMysql,
-} from 'react-icons/si';import { FiCpu, FiDatabase, FiCode, FiCloud, FiLink, FiLayers } from 'react-icons/fi';
+  SiPostgresql, SiMongodb, SiRedis, SiRabbitmq,
+  SiAngular, SiGit, SiJenkins, SiBootstrap, SiMysql,
+} from 'react-icons/si';
+import { FiCpu, FiCode, FiCloud, FiLink, FiLayers } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
 import './Skills.css';
 
@@ -108,7 +109,7 @@ export default function Skills() {
               <div className="skill-chips">
                 {cat.skills.map((skill) => (
                   <div key={skill.name} className={`skill-chip tier-${skill.tier}`}>
-                    <span className="chip-icon">{skill.icon}</span>
+                    <span className="chip-icon" aria-hidden="true">{skill.icon}</span>
                     <span className="chip-name">{skill.name}</span>
                   </div>
                 ))}

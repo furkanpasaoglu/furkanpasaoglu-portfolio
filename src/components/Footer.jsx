@@ -15,12 +15,12 @@ export default function Footer() {
           </a>
 
           <p className="footer-copy">
-            <FiHeart className="heart-icon" /> {t.footer.made} Furkan Pasaoglu · {new Date().getFullYear()}
+            <FiHeart className="heart-icon" aria-hidden="true" /> {t.footer.made} Furkan Pasaoglu · {new Date().getFullYear()}
           </p>
 
           <div className="footer-right">
-            <a href="https://github.com/furkanpasaoglu" target="_blank" rel="noreferrer" aria-label="GitHub"><FiGithub /></a>
-            <a href="https://www.linkedin.com/in/furkanpasaoglu/" target="_blank" rel="noreferrer" aria-label="LinkedIn"><FiLinkedin /></a>
+            <a href="https://github.com/furkanpasaoglu" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><FiGithub /></a>
+            <a href="https://www.linkedin.com/in/furkanpasaoglu/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><FiLinkedin /></a>
             <button onClick={scrollTop} className="scroll-top-btn" aria-label="Scroll to top">
               <FiArrowUp />
             </button>

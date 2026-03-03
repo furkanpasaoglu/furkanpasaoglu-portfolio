@@ -69,10 +69,10 @@ export default function Hero() {
         </div>
 
         <div className="hero-social" ref={socialRef}>
-          <a href="https://github.com/furkanpasaoglu" target="_blank" rel="noreferrer" aria-label="GitHub">
+          <a href="https://github.com/furkanpasaoglu" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
             <FiGithub />
           </a>
-          <a href="https://www.linkedin.com/in/furkanpasaoglu/" target="_blank" rel="noreferrer" aria-label="LinkedIn">
+          <a href="https://www.linkedin.com/in/furkanpasaoglu/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
             <FiLinkedin />
           </a>
           <a href="mailto:furkan.pasaoglu99@gmail.com" aria-label="Email">

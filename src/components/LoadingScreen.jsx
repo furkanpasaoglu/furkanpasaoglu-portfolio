@@ -29,7 +29,7 @@ export default function LoadingScreen({ onComplete }) {
     });
 
     // Animate all particles
-    gsap.utils.toArray('.ls-particle').forEach((p, i) => {
+    gsap.utils.toArray('.ls-particle').forEach((p) => {
       gsap.fromTo(p,
         { scale: 0, opacity: 0, rotation: 0 },
         {
@@ -90,6 +90,7 @@ export default function LoadingScreen({ onComplete }) {
         // Update progress bar
         if (progressBarRef.current) {
           progressBarRef.current.style.width = `${v}%`;
+          progressBarRef.current.setAttribute('aria-valuenow', String(v));
         }
 
         // Cycle loading text
@@ -142,7 +143,7 @@ export default function LoadingScreen({ onComplete }) {
       </div>
 
       {/* Center content */}
-      <div className="ls-center">
+      <div className="ls-center" role="status" aria-live="polite" aria-label="Loading">
         <div className="ls-logo" ref={logoRef}>
           <span className="ls-bracket">&lt;</span>
           FP
@@ -152,7 +153,7 @@ export default function LoadingScreen({ onComplete }) {
         <div className="ls-counter" ref={counterRef}>0%</div>
 
         <div className="ls-progress-track">
-          <div className="ls-progress-fill" ref={progressBarRef} />
+          <div className="ls-progress-fill" ref={progressBarRef} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0} />
         </div>
 
         <p className="ls-text" ref={textRef}>{t.loading.lines[0]}</p>

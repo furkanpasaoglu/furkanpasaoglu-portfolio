@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { FiX, FiGithub, FiExternalLink, FiUsers } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
@@ -9,6 +9,20 @@ export default function ProjectPanel({ project, onClose }) {
   const overlayRef = useRef(null);
   const { t } = useLang();
   const m = t.projects.modal;
+
+  const handleClose = useCallback(() => {
+    const panel = panelRef.current;
+    const overlay = overlayRef.current;
+
+    gsap.to(panel, { x: '100%', duration: 0.4, ease: 'power3.in' });
+    gsap.to(overlay, {
+      opacity: 0, duration: 0.4, ease: 'power2.in',
+      onComplete: () => {
+        document.body.style.overflow = '';
+        onClose();
+      }
+    });
+  }, [onClose]);
 
   useEffect(() => {
     if (!project) return;
@@ -40,21 +54,7 @@ export default function ProjectPanel({ project, onClose }) {
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [project]);
-
-  const handleClose = () => {
-    const panel = panelRef.current;
-    const overlay = overlayRef.current;
-
-    gsap.to(panel, { x: '100%', duration: 0.4, ease: 'power3.in' });
-    gsap.to(overlay, {
-      opacity: 0, duration: 0.4, ease: 'power2.in',
-      onComplete: () => {
-        document.body.style.overflow = '';
-        onClose();
-      }
-    });
-  };
+  }, [project, handleClose]);
 
   if (!project) return null;
 
@@ -66,7 +66,7 @@ export default function ProjectPanel({ project, onClose }) {
         onClick={handleClose}
       />
 
-      <div className="pp-panel" ref={panelRef}>
+      <div className="pp-panel" ref={panelRef} role="dialog" aria-modal="true" aria-label={project.title}>
         {/* Header */}
         <div className="pp-header pp-animate">
           <div className="pp-header-meta">
@@ -99,12 +99,12 @@ export default function ProjectPanel({ project, onClose }) {
           {/* Links */}
           <div className="pp-links pp-animate">
             {project.github && (
-              <a href={project.github} target="_blank" rel="noreferrer" className="btn btn-outline pp-link-btn">
+              <a href={project.github} target="_blank" rel="noopener noreferrer" className="btn btn-outline pp-link-btn">
                 <FiGithub /> {m.github}
               </a>
             )}
             {project.live && (
-              <a href={project.live} target="_blank" rel="noreferrer" className="btn btn-primary pp-link-btn">
+              <a href={project.live} target="_blank" rel="noopener noreferrer" className="btn btn-primary pp-link-btn">
                 <FiExternalLink /> {m.live}
               </a>
             )}
