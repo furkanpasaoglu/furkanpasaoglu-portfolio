@@ -69,8 +69,8 @@
 }
 
 .ep-close {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
@@ -180,4 +180,8 @@
 
 .ep-tech-tag:hover {
   background: rgba(255,255,255,0.04);
+}
+
+@media (max-width: 540px) {
+  .ep-body { padding: 1.8rem 1.2rem; }
 }

@@ -19,7 +19,8 @@
   font-family: 'Fira Code', monospace;
   font-size: 0.78rem;
   font-weight: 600;
-  padding: 7px 16px;
+  padding: 10px 16px;
+  min-height: 44px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: transparent;
@@ -160,7 +161,8 @@
   border: none;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
-  padding: 0;
+  padding: 8px 0;
+  min-height: 44px;
 }
 
 .blog-read-more:hover {

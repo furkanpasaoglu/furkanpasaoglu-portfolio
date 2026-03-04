@@ -116,7 +116,9 @@
   font-weight: 500;
   color: var(--text-secondary);
   transition: var(--transition);
-  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .skill-chip:hover .chip-name {

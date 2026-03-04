@@ -108,7 +108,8 @@
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 700;
@@ -124,8 +125,8 @@
 
 /* Theme toggle */
 .theme-toggle {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 6px;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
@@ -163,7 +164,11 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   z-index: 100;
 }
 

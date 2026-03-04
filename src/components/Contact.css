@@ -181,3 +181,8 @@ a.info-value:hover { color: var(--accent); }
 @media (max-width: 900px) {
   .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
 }
+
+@media (max-width: 600px) {
+  .contact-form { padding: 1.5rem; }
+  .form-submit { width: 100%; min-width: unset; }
+}

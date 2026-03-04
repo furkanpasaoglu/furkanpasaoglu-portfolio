@@ -243,6 +243,20 @@
   border-top: 1px solid var(--border);
 }
 
+@media (max-width: 768px) {
+  :root {
+    --section-pad: 70px 0;
+    --container-pad: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --section-pad: 50px 0;
+    --container-pad: 1rem;
+  }
+}
+
 html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
@@ -257,7 +271,7 @@ body {
 ::-webkit-scrollbar-track { background: var(--bg-secondary); }
 ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
 
-.container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 var(--container-pad, 2rem); }
 
 .section-tag {
   display: inline-block;

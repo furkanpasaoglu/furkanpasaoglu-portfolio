@@ -32,6 +32,7 @@ export default function Hero() {
     gsap.to(scrollRef.current, { y: 8, duration: 1.4, ease: 'power1.inOut', yoyo: true, repeat: -1, delay: 2 });
 
     const handleMouseMove = (e) => {
+      if (window.matchMedia('(pointer: coarse)').matches) return;
       const x = (e.clientX / window.innerWidth - 0.5) * 30;
       const y = (e.clientY / window.innerHeight - 0.5) * 30;
       gsap.to(bgRef.current, { x, y, duration: 1.5, ease: 'power1.out' });

@@ -73,6 +73,11 @@
   text-decoration: none;
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -10px;
 }
 
 .card-links a:hover {

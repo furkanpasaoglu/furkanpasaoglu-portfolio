@@ -51,8 +51,8 @@
 }
 
 .bpp-close {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);
@@ -272,4 +272,8 @@
 @media (max-width: 600px) {
   .bpp-scroll { padding: 1.8rem 1.4rem 3rem; }
   .bpp-date { margin-left: 0; width: 100%; }
+  .bpp-pre code {
+    font-size: 0.75rem;
+    -webkit-overflow-scrolling: touch;
+  }
 }
