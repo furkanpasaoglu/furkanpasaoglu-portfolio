@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import './App.css'
 import { LanguageProvider } from './context/LanguageContext'
 import { ThemeProvider } from './context/ThemeContext'
 import LoadingScreen from './components/LoadingScreen'

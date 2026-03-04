@@ -2,16 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { FiX, FiClock, FiTag, FiArrowRight, FiSearch } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { allCategories } from '../data/blogData';
 import './BlogAllPosts.css';
-
-const allCategories = ['all', '.NET', 'AI / ML', 'DevOps'];
 
 export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
   const overlayRef = useRef(null);
   const panelRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const { t, lang } = useLang();
+  const { t } = useLang();
 
   const filtered = posts.filter((p) => {
     const matchCat = activeCategory === 'all' || p.category === activeCategory;
@@ -28,8 +28,9 @@ export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
     gsap.to(overlayRef.current, { opacity: 0, duration: 0.35, onComplete: onClose });
   }, [onClose]);
 
+  useBodyScrollLock();
+
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
     gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
     gsap.fromTo(panelRef.current, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' });
 
@@ -37,7 +38,6 @@ export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
     };
   }, [handleClose]);
 
@@ -68,7 +68,7 @@ export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
             <input
               type="text"
               className="bap-search"
-              placeholder={lang === 'tr' ? 'Yazılarda ara...' : 'Search articles...'}
+              placeholder={t.common.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -90,7 +90,7 @@ export default function BlogAllPosts({ posts, onClose, onSelectPost }) {
         <div className="bap-scroll">
           {filtered.length === 0 ? (
             <div className="bap-empty">
-              <span>{lang === 'tr' ? 'Sonuç bulunamadı.' : 'No results found.'}</span>
+              <span>{t.common.noResults}</span>
             </div>
           ) : (
             <div className="bap-grid">

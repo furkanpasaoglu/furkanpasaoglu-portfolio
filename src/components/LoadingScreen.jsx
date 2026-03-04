@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { gsap } from 'gsap';
 import { useLang } from '../context/LanguageContext';
 import './LoadingScreen.css';
@@ -10,6 +10,17 @@ export default function LoadingScreen({ onComplete }) {
   const logoRef = useRef(null);
   const progressBarRef = useRef(null);
   const { t } = useLang();
+
+  const particles = useMemo(() =>
+    [...Array(20)].map((_, i) => ({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      width: 4 + Math.random() * 8,
+      height: 4 + Math.random() * 8,
+      bg: i % 3 === 0 ? 'var(--accent)' : i % 3 === 1 ? 'var(--accent-alt)' : '#a78bfa',
+      borderRadius: i % 2 === 0 ? '50%' : '3px',
+    })),
+  []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -126,17 +137,17 @@ export default function LoadingScreen({ onComplete }) {
 
       {/* Floating particles */}
       <div className="ls-particles">
-        {[...Array(20)].map((_, i) => (
+        {particles.map((p, i) => (
           <div
             key={i}
             className="ls-particle"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${4 + Math.random() * 8}px`,
-              height: `${4 + Math.random() * 8}px`,
-              background: i % 3 === 0 ? 'var(--accent)' : i % 3 === 1 ? 'var(--accent-alt)' : '#a78bfa',
-              borderRadius: i % 2 === 0 ? '50%' : '3px',
+              left: `${p.left}%`,
+              top: `${p.top}%`,
+              width: `${p.width}px`,
+              height: `${p.height}px`,
+              background: p.bg,
+              borderRadius: p.borderRadius,
             }}
           />
         ))}

@@ -1,11 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { FiCode, FiCpu, FiLayers, FiZap } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
+import { LINKS } from '../data/constants';
 import './About.css';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const statIcons = [<FiCode />, <FiLayers />, <FiCpu />, <FiZap />];
 
@@ -46,7 +44,7 @@ export default function About() {
             <p className="about-p">{t.about.p3}</p>
             <div className="about-cta-row">
               <a href="#contact" className="btn btn-primary">{t.about.cta1}</a>
-              <a href="/Furkan-Pasaoglu-Senior-Software-Developer-CV.pdf" target="_blank" rel="noopener noreferrer" className="btn btn-outline">{t.about.cta2}</a>
+              <a href={LINKS.cv} target="_blank" rel="noopener noreferrer" className="btn btn-outline">{t.about.cta2}</a>
             </div>
           </div>
 

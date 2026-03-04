@@ -27,10 +27,6 @@
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
 
-.project-card.featured {
-  grid-column: span 1;
-}
-
 .card-glow {
   position: absolute;
   top: 0;

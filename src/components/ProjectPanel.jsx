@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import { useRef } from 'react';
 import { FiX, FiGithub, FiExternalLink, FiUsers } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
+import { useSlidePanelAnimation } from '../hooks/useSlidePanelAnimation';
 import './ProjectPanel.css';
 
 export default function ProjectPanel({ project, onClose }) {
@@ -10,51 +10,7 @@ export default function ProjectPanel({ project, onClose }) {
   const { t } = useLang();
   const m = t.projects.modal;
 
-  const handleClose = useCallback(() => {
-    const panel = panelRef.current;
-    const overlay = overlayRef.current;
-
-    gsap.to(panel, { x: '100%', duration: 0.4, ease: 'power3.in' });
-    gsap.to(overlay, {
-      opacity: 0, duration: 0.4, ease: 'power2.in',
-      onComplete: () => {
-        document.body.style.overflow = '';
-        onClose();
-      }
-    });
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!project) return;
-
-    // Lock body scroll
-    document.body.style.overflow = 'hidden';
-
-    const panel = panelRef.current;
-    const overlay = overlayRef.current;
-
-    gsap.fromTo(overlay,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.35, ease: 'power2.out' }
-    );
-
-    gsap.fromTo(panel,
-      { x: '100%' },
-      { x: '0%', duration: 0.5, ease: 'power3.out', delay: 0.05 }
-    );
-
-    gsap.fromTo(panel.querySelectorAll('.pp-animate'),
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, stagger: 0.06, duration: 0.5, ease: 'power3.out', delay: 0.3 }
-    );
-
-    const handleKey = (e) => { if (e.key === 'Escape') handleClose(); };
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
-    };
-  }, [project, handleClose]);
+  const { handleClose } = useSlidePanelAnimation(panelRef, overlayRef, onClose, '.pp-animate');
 
   if (!project) return null;
 

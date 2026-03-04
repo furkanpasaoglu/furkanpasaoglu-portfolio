@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   SiDotnet, SiDocker,
   SiPostgresql, SiMongodb, SiRedis, SiRabbitmq,
@@ -8,9 +7,8 @@ import {
 } from 'react-icons/si';
 import { FiCpu, FiCode, FiCloud, FiLink, FiLayers } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
+import SectionHeader from './shared/SectionHeader';
 import './Skills.css';
-
-gsap.registerPlugin(ScrollTrigger);
 
 // tier: 'expert' | 'proficient' | 'familiar'
 const categories = [
@@ -86,11 +84,12 @@ export default function Skills() {
   return (
     <section id="skills" className="skills-section" ref={sectionRef}>
       <div className="container">
-        <div className="skills-header">
-          <span className="section-tag">{t.skills.tag}</span>
-          <h2 className="section-title">{t.skills.title}</h2>
-          <p className="section-desc">{t.skills.desc}</p>
-        </div>
+        <SectionHeader
+          tag={t.skills.tag}
+          title={t.skills.title}
+          desc={t.skills.desc}
+          className="skills-header"
+        />
 
         {/* Tier legend */}
         <div className="skills-tier-legend">

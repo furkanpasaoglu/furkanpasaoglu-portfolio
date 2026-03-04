@@ -94,4 +94,11 @@ export const en = {
   loading: {
     lines: ['Initializing System...', 'Loading Modules...', 'Getting Ready...'],
   },
+  common: {
+    details: 'Details',
+    back: 'Back',
+    close: 'Close',
+    searchPlaceholder: 'Search articles...',
+    noResults: 'No results found.',
+  },
 };

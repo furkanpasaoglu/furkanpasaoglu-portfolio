@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import { useRef } from 'react';
 import { FiX, FiBriefcase, FiBookOpen } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
+import { useSlidePanelAnimation } from '../hooks/useSlidePanelAnimation';
 import './ExperiencePanel.css';
 
 export default function ExperiencePanel({ exp, onClose }) {
@@ -10,36 +10,10 @@ export default function ExperiencePanel({ exp, onClose }) {
   const { t } = useLang();
   const m = t.experience.modal;
 
+  const { handleClose } = useSlidePanelAnimation(panelRef, overlayRef, onClose, '.ep-animate');
+
   const accentColor = exp.isEducation ? 'var(--accent-alt)' : '#10b981';
   const accentRgb   = exp.isEducation ? '99,179,237' : '16,185,129';
-
-  const handleClose = useCallback(() => {
-    gsap.to(panelRef.current,   { x: '100%', duration: 0.4, ease: 'power3.in' });
-    gsap.to(overlayRef.current, {
-      opacity: 0, duration: 0.4, ease: 'power2.in',
-      onComplete: () => { document.body.style.overflow = ''; onClose(); },
-    });
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!exp) return;
-    document.body.style.overflow = 'hidden';
-
-    gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'power2.out' });
-    gsap.fromTo(panelRef.current,   { x: '100%' },  { x: '0%', duration: 0.5, ease: 'power3.out', delay: 0.05 });
-    gsap.fromTo(
-      panelRef.current.querySelectorAll('.ep-animate'),
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, stagger: 0.06, duration: 0.5, ease: 'power3.out', delay: 0.3 }
-    );
-
-    const handleKey = (e) => { if (e.key === 'Escape') handleClose(); };
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
-    };
-  }, [exp, handleClose]);
 
   if (!exp) return null;
 

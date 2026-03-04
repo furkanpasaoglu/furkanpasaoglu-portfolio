@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { FiMail, FiMapPin, FiSend, FiGithub, FiLinkedin } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
+import { LINKS, PERSONAL } from '../data/constants';
+import SectionHeader from './shared/SectionHeader';
 import './Contact.css';
 
-gsap.registerPlugin(ScrollTrigger);
+const SOCIALS = [
+  { Icon: FiGithub,   label: 'GitHub',   href: LINKS.github },
+  { Icon: FiLinkedin, label: 'LinkedIn', href: LINKS.linkedin },
+  { Icon: FiMail,     label: 'Email',    href: LINKS.email },
+];
 
 export default function Contact() {
   const sectionRef = useRef(null);
@@ -13,11 +18,6 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const { t } = useLang();
 
-  const socials = [
-    { icon: <FiGithub />, label: 'GitHub', href: 'https://github.com/furkanpasaoglu' },
-    { icon: <FiLinkedin />, label: 'LinkedIn', href: 'https://www.linkedin.com/in/furkanpasaoglu/' },
-    { icon: <FiMail />, label: 'Email', href: 'mailto:furkan.pasaoglu99@gmail.com' },
-  ];
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -51,26 +51,33 @@ export default function Contact() {
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
   };
 
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const subject = encodeURIComponent(`Portfolio Contact from ${formData.name}`);
     const body = encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
     );
-    window.location.href = `mailto:furkan.pasaoglu99@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${PERSONAL.emailRaw}?subject=${subject}&body=${body}`;
     setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
+    timerRef.current = setTimeout(() => setSubmitted(false), 4000);
     setFormData({ name: '', email: '', message: '' });
   };
 
   return (
     <section id="contact" className="contact-section" ref={sectionRef}>
       <div className="container">
-        <div className="contact-header">
-          <span className="section-tag">{t.contact.tag}</span>
-          <h2 className="section-title">{t.contact.title}</h2>
-          <p className="section-desc">{t.contact.desc}</p>
-        </div>
+        <SectionHeader
+          tag={t.contact.tag}
+          title={t.contact.title}
+          desc={t.contact.desc}
+          className="contact-header"
+        />
 
         <div className="contact-grid">
           <div className="contact-info">
@@ -78,7 +85,7 @@ export default function Contact() {
               <div className="info-icon"><FiMail /></div>
               <div>
                 <p className="info-label">{t.contact.email}</p>
-                <a href="mailto:furkan.pasaoglu99@gmail.com" className="info-value">furkan.pasaoglu99@gmail.com</a>
+                <a href={LINKS.email} className="info-value">{PERSONAL.emailRaw}</a>
               </div>
             </div>
             <div className="info-item">
@@ -95,9 +102,9 @@ export default function Contact() {
             </div>
 
             <div className="contact-socials">
-              {socials.map((s) => (
+              {SOCIALS.map((s) => (
                 <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" className="social-link" aria-label={s.label}>
-                  <span className="social-icon">{s.icon}</span>
+                  <span className="social-icon"><s.Icon /></span>
                   <span className="social-label">{s.label}</span>
                 </a>
               ))}

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import { useRef } from 'react';
 import { FiX, FiClock, FiTag, FiArrowLeft, FiGithub } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
 import { blogContent } from '../data/blogContent';
+import { useSlidePanelAnimation } from '../hooks/useSlidePanelAnimation';
 import './BlogPostPanel.css';
 
 export default function BlogPostPanel({ post, onClose }) {
@@ -12,29 +12,7 @@ export default function BlogPostPanel({ post, onClose }) {
 
   const content = blogContent[lang]?.[post.id] || [];
 
-  const handleClose = useCallback(() => {
-    gsap.to(panelRef.current, { x: '100%', duration: 0.4, ease: 'power3.in' });
-    gsap.to(overlayRef.current, {
-      opacity: 0, duration: 0.35, onComplete: onClose,
-    });
-  }, [onClose]);
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-
-    gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
-    gsap.fromTo(panelRef.current,
-      { x: '100%' },
-      { x: '0%', duration: 0.5, ease: 'power3.out' }
-    );
-
-    const onKey = (e) => { if (e.key === 'Escape') handleClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
-    };
-  }, [handleClose]);
+  const { handleClose } = useSlidePanelAnimation(panelRef, overlayRef, onClose, null);
 
   return (
     <div className="bpp-overlay" ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) handleClose(); }}>
@@ -42,7 +20,7 @@ export default function BlogPostPanel({ post, onClose }) {
         {/* Panel Header */}
         <div className="bpp-header">
           <button className="bpp-back" onClick={handleClose}>
-            <FiArrowLeft /> {lang === 'tr' ? 'Geri' : 'Back'}
+            <FiArrowLeft /> {t.common.back}
           </button>
           <button className="bpp-close" onClick={handleClose} aria-label="Close">
             <FiX />

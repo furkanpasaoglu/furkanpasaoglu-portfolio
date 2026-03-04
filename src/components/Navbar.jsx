@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { FiSun, FiMoon } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { LINKS } from '../data/constants';
+import LogoBracket from './shared/LogoBracket';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -12,14 +14,14 @@ export default function Navbar() {
   const { lang, toggleLang, t } = useLang();
   const { theme, toggleTheme } = useTheme();
 
-  const navLinks = [
+  const navLinks = useMemo(() => [
     { label: t.nav.about, href: '#about' },
     { label: t.nav.skills, href: '#skills' },
     { label: t.nav.projects, href: '#projects' },
     { label: t.nav.experience, href: '#experience' },
     { label: t.nav.blog, href: '#blog' },
     { label: t.nav.contact, href: '#contact' },
-  ];
+  ], [t]);
 
   useEffect(() => {
     gsap.fromTo(
@@ -39,7 +41,7 @@ export default function Navbar() {
       {menuOpen && <div className="nav-backdrop" onClick={() => setMenuOpen(false)} />}
       <div className="navbar-inner container">
         <a href="#hero" className="navbar-logo">
-          <span className="logo-bracket">&lt;</span>FP<span className="logo-bracket">/&gt;</span>
+          <LogoBracket />
         </a>
 
         <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
@@ -49,7 +51,7 @@ export default function Navbar() {
             </li>
           ))}
           <li>
-            <a href="/Furkan-Pasaoglu-Senior-Software-Developer-CV.pdf" className="btn-resume" target="_blank" rel="noopener noreferrer">
+            <a href={LINKS.cv} className="btn-resume" target="_blank" rel="noopener noreferrer">
               {t.nav.resume}
             </a>
           </li>

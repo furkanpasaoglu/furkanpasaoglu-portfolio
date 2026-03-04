@@ -94,4 +94,11 @@ export const tr = {
   loading: {
     lines: ['Sistem Başlatılıyor...', 'Modüller Yükleniyor...', 'Hazırlanıyor...'],
   },
+  common: {
+    details: 'Detaylar',
+    back: 'Geri',
+    close: 'Kapat',
+    searchPlaceholder: 'Yazılarda ara...',
+    noResults: 'Sonuç bulunamadı.',
+  },
 };

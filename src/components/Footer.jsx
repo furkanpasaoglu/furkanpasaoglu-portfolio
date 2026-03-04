@@ -1,5 +1,7 @@
 import { FiHeart, FiGithub, FiLinkedin, FiArrowUp } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
+import { LINKS } from '../data/constants';
+import LogoBracket from './shared/LogoBracket';
 import './Footer.css';
 
 export default function Footer() {
@@ -11,7 +13,7 @@ export default function Footer() {
       <div className="container">
         <div className="footer-inner">
           <a href="#hero" className="footer-logo">
-            <span className="logo-bracket">&lt;</span>FP<span className="logo-bracket">/&gt;</span>
+            <LogoBracket />
           </a>
 
           <p className="footer-copy">
@@ -19,8 +21,8 @@ export default function Footer() {
           </p>
 
           <div className="footer-right">
-            <a href="https://github.com/furkanpasaoglu" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><FiGithub /></a>
-            <a href="https://www.linkedin.com/in/furkanpasaoglu/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><FiLinkedin /></a>
+            <a href={LINKS.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><FiGithub /></a>
+            <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><FiLinkedin /></a>
             <button onClick={scrollTop} className="scroll-top-btn" aria-label="Scroll to top">
               <FiArrowUp />
             </button>

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { FiArrowDown, FiGithub, FiLinkedin, FiMail } from 'react-icons/fi';
 import { useLang } from '../context/LanguageContext';
+import { LINKS } from '../data/constants';
 import './Hero.css';
 
 export default function Hero() {
@@ -69,13 +70,13 @@ export default function Hero() {
         </div>
 
         <div className="hero-social" ref={socialRef}>
-          <a href="https://github.com/furkanpasaoglu" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+          <a href={LINKS.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
             <FiGithub />
           </a>
-          <a href="https://www.linkedin.com/in/furkanpasaoglu/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+          <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
             <FiLinkedin />
           </a>
-          <a href="mailto:furkan.pasaoglu99@gmail.com" aria-label="Email">
+          <a href={LINKS.email} aria-label="Email">
             <FiMail />
           </a>
         </div>

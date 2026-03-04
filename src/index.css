@@ -25,6 +25,12 @@
   --navbar-bg: rgba(8, 8, 16, 0.92);
   --overlay-bg: rgba(8, 8, 16, 0.8);
   --card-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+
+  /* Z-index scale */
+  --z-navbar:  100;
+  --z-panel:   200;
+  --z-modal:   300;
+  --z-loading: 9999;
 }
 
 [data-theme="light"] {
