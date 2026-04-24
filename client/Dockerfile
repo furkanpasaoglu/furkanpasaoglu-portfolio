@@ -14,6 +14,7 @@ FROM nginx:alpine
 
 COPY --from=builder /app/dist /seed/
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/conf.d/security-headers.conf
 
 # On every startup, refresh the built static bundle from the image into the
 # shared volume. We wipe /assets and index.html so new build hashes fully
