@@ -1,0 +1,772 @@
+[
+  {
+    "slug": "clean-architecture-structuring-a",
+    "sortOrder": 0,
+    "isFeatured": true,
+    "isPublished": true,
+    "category": ".NET",
+    "color": "#7c6fff",
+    "publishedAt": null,
+    "tags": [
+      ".NET",
+      "Clean Architecture",
+      "SOLID"
+    ],
+    "dataTr": {
+      "title": "Clean Architecture: .NET Projesini Sıfırdan Yapılandırmak",
+      "excerpt": "N-Tier mimariden Clean Architecture'a geçiş sürecinde karşılaştığım zorluklar, aldığım kararlar ve öğrendiklerim. Domain, Application, Infrastructure ve Presentation katmanlarını nasıl ayırdım?",
+      "date": "15 Şubat 2026",
+      "readTime": 12
+    },
+    "dataEn": {
+      "title": "Clean Architecture: Structuring a .NET Project from Scratch",
+      "excerpt": "The challenges, decisions, and lessons I encountered moving from N-Tier to Clean Architecture. How I separated Domain, Application, Infrastructure, and Presentation layers.",
+      "date": "February 15, 2026",
+      "readTime": 12
+    },
+    "contentTr": [
+      {
+        "type": "paragraph",
+        "text": "N-Tier mimariden Clean Architecture'a geçiş kararı, projenin büyümesiyle birlikte kaçınılmaz hale geldi. Katmanlar arası sıkı bağımlılıklar, test yazmanın zorluğu ve iş kurallarının veritabanı katmanına sızması bizi harekete geçirdi.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Neden Clean Architecture?",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Clean Architecture'ın temel fikri şu: iş kuralları hiçbir şeye bağımlı olmamalı. Veritabanı değişirse, UI değişirse, hatta framework değişirse — domain katmanınız bunlardan etkilenmez.",
+        "lang": null
+      },
+      {
+        "type": "note",
+        "text": "Temel kural: Dependency arrow'lar sadece içe doğru akar. Domain → Application → Infrastructure, şeklinde değil; tam tersi: Infrastructure → Application → Domain.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Katman Yapısı",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "4 temel katman oluşturduk: Domain (entity'ler, value object'ler, domain event'ler), Application (use case'ler, CQRS komutları, interface tanımları), Infrastructure (veritabanı, mesaj kuyruğu, dış servisler) ve Presentation (API controller'ları, middleware).",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Domain Layer — hiçbir dış bağımlılık yok\npublic class Order : BaseEntity\n{\n    public Guid CustomerId { get; private set; }\n    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();\n    private readonly List<OrderItem> _items = new();\n\n    public static Order Create(Guid customerId)\n    {\n        var order = new Order { CustomerId = customerId };\n        order.AddDomainEvent(new OrderCreatedEvent(order.Id));\n        return order;\n    }\n\n    public void AddItem(Guid productId, decimal price, int qty)\n    {\n        _items.Add(new OrderItem(productId, price, qty));\n    }\n}",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Application Katmanı ve CQRS",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Application katmanında MediatR ile CQRS pattern'ini uyguladık. Her use case bir Command veya Query olarak modellendi. Bu sayede okuma ve yazma operasyonları tamamen ayrıştı.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Application Layer — sadece Domain ve abstraction'lara bağımlı\npublic record CreateOrderCommand(Guid CustomerId, List<OrderItemDto> Items)\n    : IRequest<Guid>;\n\npublic class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Guid>\n{\n    private readonly IOrderRepository _repo;\n    private readonly IUnitOfWork _uow;\n\n    public CreateOrderCommandHandler(IOrderRepository repo, IUnitOfWork uow)\n    {\n        _repo = repo;\n        _uow = uow;\n    }\n\n    public async Task<Guid> Handle(CreateOrderCommand cmd, CancellationToken ct)\n    {\n        var order = Order.Create(cmd.CustomerId);\n        foreach (var item in cmd.Items)\n            order.AddItem(item.ProductId, item.Price, item.Quantity);\n\n        await _repo.AddAsync(order, ct);\n        await _uow.SaveChangesAsync(ct);\n        return order.Id;\n    }\n}",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Sonuç",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Geçiş sürecinde en çok vakit alan şey mevcut kodun refactor edilmesiydi. Ancak sonuç oldukça tatmin ediciydi: unit test coverage %8'den %74'e çıktı, yeni feature geliştirme süresi ortalama %40 azaldı. Clean Architecture \"overkill\" gibi görünebilir küçük projeler için, ancak growth mindset'iyle yaklaşırsanız uzun vadede kazandırıyor.",
+        "lang": null
+      }
+    ],
+    "contentEn": [
+      {
+        "type": "paragraph",
+        "text": "The decision to migrate from N-Tier to Clean Architecture became inevitable as the project grew. Tight coupling between layers, difficulty writing tests, and business rules leaking into the data layer forced us to act.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Why Clean Architecture?",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "The core idea of Clean Architecture: business rules should depend on nothing. If the database changes, the UI changes, or even the framework changes — your domain layer is unaffected.",
+        "lang": null
+      },
+      {
+        "type": "note",
+        "text": "Key rule: Dependency arrows only point inward. Infrastructure → Application → Domain. Never the other way around.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Layer Structure",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "We created 4 core layers: Domain (entities, value objects, domain events), Application (use cases, CQRS commands, interface definitions), Infrastructure (database, message queue, external services), and Presentation (API controllers, middleware).",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Domain Layer — zero external dependencies\npublic class Order : BaseEntity\n{\n    public Guid CustomerId { get; private set; }\n    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();\n    private readonly List<OrderItem> _items = new();\n\n    public static Order Create(Guid customerId)\n    {\n        var order = new Order { CustomerId = customerId };\n        order.AddDomainEvent(new OrderCreatedEvent(order.Id));\n        return order;\n    }\n\n    public void AddItem(Guid productId, decimal price, int qty)\n    {\n        _items.Add(new OrderItem(productId, price, qty));\n    }\n}",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Application Layer and CQRS",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "In the Application layer, we implemented the CQRS pattern with MediatR. Each use case is modeled as a Command or a Query, fully decoupling read and write operations.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Application Layer — depends only on Domain and abstractions\npublic record CreateOrderCommand(Guid CustomerId, List<OrderItemDto> Items)\n    : IRequest<Guid>;\n\npublic class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Guid>\n{\n    private readonly IOrderRepository _repo;\n    private readonly IUnitOfWork _uow;\n\n    public async Task<Guid> Handle(CreateOrderCommand cmd, CancellationToken ct)\n    {\n        var order = Order.Create(cmd.CustomerId);\n        foreach (var item in cmd.Items)\n            order.AddItem(item.ProductId, item.Price, item.Quantity);\n\n        await _repo.AddAsync(order, ct);\n        await _uow.SaveChangesAsync(ct);\n        return order.Id;\n    }\n}",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Results",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "The most time-consuming part was refactoring existing code. But the results were worth it: unit test coverage went from 8% to 74%, and average feature development time dropped by ~40%. Clean Architecture may seem like overkill for small projects, but with a growth mindset, it pays off in the long run.",
+        "lang": null
+      }
+    ]
+  },
+  {
+    "slug": "background-job-management-with",
+    "sortOrder": 1,
+    "isFeatured": true,
+    "isPublished": true,
+    "category": ".NET",
+    "color": "#00d4ff",
+    "publishedAt": null,
+    "tags": [
+      "Hangfire",
+      "Background Jobs",
+      ".NET"
+    ],
+    "dataTr": {
+      "title": "Hangfire ile Background Job Yönetimi ve Zamanlanmış Görevler",
+      "excerpt": ".NET projelerinde tekrarlayan görevleri, sıralı işleri ve zamanlanmış süreçleri yönetmek için Hangfire nasıl kullanılır? Kurulum, dashboard ve production deneyimlerimi aktarıyorum.",
+      "date": "2 Ocak 2026",
+      "readTime": 13
+    },
+    "dataEn": {
+      "title": "Background Job Management with Hangfire in .NET",
+      "excerpt": "How to use Hangfire to manage recurring tasks, queued jobs, and scheduled processes in .NET projects? Setup, dashboard configuration, and lessons from production.",
+      "date": "January 2, 2026",
+      "readTime": 13
+    },
+    "contentTr": [
+      {
+        "type": "paragraph",
+        "text": "Bir projede e-posta gönderme, rapor üretme ve toplu veri işleme gibi görevler kullanıcı isteklerini yavaşlatıyordu. Bu işlemleri HTTP döngüsünden çıkarıp arka planda yürütmek için Hangfire'yi devreye aldık.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Hangfire Nedir?",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Hangfire, .NET için geliştirilmiş açık kaynaklı bir arka plan iş kütüphanesidir. Fire-and-forget, zamanlanmış tekrarlı (CRON), zincirleme ve toplu görevleri destekler. Persisted queue sayesinde uygulama yeniden başlatılsa bile görevler kaybolmaz.",
+        "lang": null
+      },
+      {
+        "type": "note",
+        "text": "Hangfire işleri varsayılan olarak SQL Server veya Redis'e kaydedilir. Uygulama çökse bile iş kaldığı yerden devam eder.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Temel İş Türleri",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Hangfire dört farklı iş türünü destekler. Kullanım şekline göre doğru türü seçmek hem performans hem de yönetilebilirlik açısından kritiktir.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Program.cs — Hangfire kurulumu\nbuilder.Services.AddHangfire(cfg => cfg\n    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)\n    .UseSimpleAssemblyNameTypeSerializer()\n    .UseSqlServerStorage(connectionString));\nbuilder.Services.AddHangfireServer();\n\n// 1. Fire-and-forget: tek seferlik, hemen çalış\nBackgroundJob.Enqueue<IEmailService>(s => s.SendWelcomeEmailAsync(userId));\n\n// 2. Delayed: belirli süre sonra çalış\nBackgroundJob.Schedule<IReportService>(\n    s => s.GenerateMonthlyReportAsync(), TimeSpan.FromHours(1));\n\n// 3. Recurring: CRON ile tekrarlı\nRecurringJob.AddOrUpdate<ICleanupService>(\n    \"cleanup-expired-tokens\",\n    s => s.RemoveExpiredTokensAsync(),\n    Cron.Daily);\n\n// 4. Continuations: zincirleme iş\nvar jobId = BackgroundJob.Enqueue<IOrderService>(s => s.ProcessAsync(orderId));\nBackgroundJob.ContinueJobWith<INotificationService>(\n    jobId, s => s.NotifyCustomerAsync(orderId));",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Dashboard ve İzleme",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Hangfire, yerleşik bir web dashboard'ıyla gelir. Başarılı, bekleyen, başarısız ve tekrarlı işlerin tümünü tek sayfadan takip edebilirsiniz. Başarısız işleri anında yeniden tetiklemek mümkün.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Dashboard erişimini rolüne göre kısıtla\napp.UseHangfireDashboard(\"/jobs\", new DashboardOptions\n{\n    Authorization = [new HangfireAuthorizationFilter()]\n});\n\npublic class HangfireAuthorizationFilter : IDashboardAuthorizationFilter\n{\n    public bool Authorize(DashboardContext ctx)\n    {\n        var httpCtx = ctx.GetHttpContext();\n        return httpCtx.User.IsInRole(\"Admin\");\n    }\n}",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Sonuçlar",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Hangfire'yi devreye aldıktan sonra e-posta gönderme işlemleri HTTP yanıt süresini hiç etkilemez hale geldi. Toplu rapor üretiminde yaşadığımız zaman aşımı hataları tamamen ortadan kalktı. Başarısız işlerde otomatik yeniden deneme (retry) mekanizması sayesinde çok az sayıda log incelememiz yeterli oluyor.",
+        "lang": null
+      }
+    ],
+    "contentEn": [
+      {
+        "type": "paragraph",
+        "text": "In one of our projects, operations like sending emails, generating reports, and processing bulk data were slowing down user requests. We introduced Hangfire to move these tasks out of the HTTP pipeline and run them in the background.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "What is Hangfire?",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Hangfire is an open-source background job library for .NET. It supports fire-and-forget, recurring (CRON), delayed, and continuation jobs. Thanks to its persisted queue, jobs are never lost even if the application restarts.",
+        "lang": null
+      },
+      {
+        "type": "note",
+        "text": "Hangfire persists jobs to SQL Server or Redis by default. Even if the application crashes, jobs resume from where they left off.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Core Job Types",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Hangfire supports four distinct job types. Choosing the right type for your use case is critical for both performance and maintainability.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Program.cs — Hangfire setup\nbuilder.Services.AddHangfire(cfg => cfg\n    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)\n    .UseSimpleAssemblyNameTypeSerializer()\n    .UseSqlServerStorage(connectionString));\nbuilder.Services.AddHangfireServer();\n\n// 1. Fire-and-forget: run once, immediately\nBackgroundJob.Enqueue<IEmailService>(s => s.SendWelcomeEmailAsync(userId));\n\n// 2. Delayed: run after a specific time\nBackgroundJob.Schedule<IReportService>(\n    s => s.GenerateMonthlyReportAsync(), TimeSpan.FromHours(1));\n\n// 3. Recurring: run on a CRON schedule\nRecurringJob.AddOrUpdate<ICleanupService>(\n    \"cleanup-expired-tokens\",\n    s => s.RemoveExpiredTokensAsync(),\n    Cron.Daily);\n\n// 4. Continuations: chain jobs together\nvar jobId = BackgroundJob.Enqueue<IOrderService>(s => s.ProcessAsync(orderId));\nBackgroundJob.ContinueJobWith<INotificationService>(\n    jobId, s => s.NotifyCustomerAsync(orderId));",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Dashboard & Monitoring",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Hangfire ships with a built-in web dashboard. You can monitor all succeeded, enqueued, failed, and recurring jobs from a single page. Failed jobs can be retried instantly with one click.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Restrict dashboard access by role\napp.UseHangfireDashboard(\"/jobs\", new DashboardOptions\n{\n    Authorization = [new HangfireAuthorizationFilter()]\n});\n\npublic class HangfireAuthorizationFilter : IDashboardAuthorizationFilter\n{\n    public bool Authorize(DashboardContext ctx)\n    {\n        var httpCtx = ctx.GetHttpContext();\n        return httpCtx.User.IsInRole(\"Admin\");\n    }\n}",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Results",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "After deploying Hangfire, email delivery no longer impacted HTTP response times. Timeout errors we experienced during bulk report generation disappeared completely. The automatic retry mechanism means we rarely need to dig through logs — failures resolve themselves.",
+        "lang": null
+      }
+    ]
+  },
+  {
+    "slug": "semantic-search-with-c",
+    "sortOrder": 2,
+    "isFeatured": true,
+    "isPublished": true,
+    "category": "AI / ML",
+    "color": "#f59e0b",
+    "publishedAt": null,
+    "tags": [
+      "Semantic Kernel",
+      "OpenAI",
+      "Vector DB"
+    ],
+    "dataTr": {
+      "title": "C# ile Semantic Search: Semantic Kernel ve Vector DB",
+      "excerpt": "OpenAI embedding'leri, Semantic Kernel ve Qdrant kullanarak .NET uygulamasına nasıl anlamlı arama eklediğimi adım adım anlatan rehber.",
+      "date": "20 Aralık 2025",
+      "readTime": 18
+    },
+    "dataEn": {
+      "title": "Semantic Search with C#: Semantic Kernel and Vector DB",
+      "excerpt": "A step-by-step guide on how I added meaningful search to a .NET application using OpenAI embeddings, Semantic Kernel, and Qdrant.",
+      "date": "December 20, 2025",
+      "readTime": 18
+    },
+    "contentTr": [
+      {
+        "type": "paragraph",
+        "text": "Bir enterprise CRM projesinde kullanıcılar \"Bunu daha önce gördüm ama tam olarak ne demiştim?\" diye soruyordu. Klasik keyword search yetersiz kalıyordu. Semantic search ile bu sorunu çözdük.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Semantic Search Nedir?",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Keyword search metinleri karakter karakter karşılaştırır. Semantic search ise metnin anlamını vektörle temsil eder. \"Kira ödendi\" ile \"Aylık aidat alındı\" farklı kelimeler ama benzer anlam — semantic search bunu yakalar.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Mimari: Semantic Kernel + Qdrant",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Kullandığımız stack: Microsoft Semantic Kernel (orchestration), OpenAI text-embedding-3-small modeli (vektörleştirme), Qdrant (vector database). Tüm iletişim logları embedding'lenerek Qdrant'a yüklendi.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Semantic Kernel ile embedding ve arama\nvar kernel = Kernel.CreateBuilder()\n    .AddOpenAITextEmbeddingGeneration(\"text-embedding-3-small\", apiKey)\n    .Build();\n\nvar embeddingService = kernel.GetRequiredService<ITextEmbeddingGenerationService>();\n\n// Metin → vektör\nvar embedding = await embeddingService.GenerateEmbeddingAsync(userQuery);\n\n// Qdrant'ta benzer vektörleri ara\nvar searchResult = await qdrantClient.SearchAsync(\n    collectionName: \"communication_logs\",\n    vector: embedding.ToArray(),\n    limit: 10,\n    scoreThreshold: 0.75f\n);",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Sonuçlar",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "İlk deployment'tan sonra arama doğruluğu %340 arttı (recall@10 metriği). Kullanıcılar artık tam kelimeyi bilmeden de arama yapabiliyordu. Embedding maliyeti ilk başta endişe yaratsa da text-embedding-3-small'ın düşük fiyatı sayesinde ayda sadece ~$12 harcıyoruz.",
+        "lang": null
+      }
+    ],
+    "contentEn": [
+      {
+        "type": "paragraph",
+        "text": "In an enterprise CRM, users kept asking \"I've seen this before, but what exactly did I say?\" Classic keyword search was falling short. We solved this with semantic search.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "What is Semantic Search?",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Keyword search compares text character by character. Semantic search represents meaning as a vector. \"Rent received\" and \"Monthly payment collected\" use different words but have similar meaning — semantic search captures that.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Architecture: Semantic Kernel + Qdrant",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Our stack: Microsoft Semantic Kernel (orchestration), OpenAI text-embedding-3-small (vectorization), Qdrant (vector database). All communication logs were embedded and loaded into Qdrant.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Embedding and search with Semantic Kernel\nvar kernel = Kernel.CreateBuilder()\n    .AddOpenAITextEmbeddingGeneration(\"text-embedding-3-small\", apiKey)\n    .Build();\n\nvar embeddingService = kernel.GetRequiredService<ITextEmbeddingGenerationService>();\n\n// Text → vector\nvar embedding = await embeddingService.GenerateEmbeddingAsync(userQuery);\n\n// Search for similar vectors in Qdrant\nvar searchResult = await qdrantClient.SearchAsync(\n    collectionName: \"communication_logs\",\n    vector: embedding.ToArray(),\n    limit: 10,\n    scoreThreshold: 0.75f\n);",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Results",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "After the first deployment, search accuracy improved by 340% (recall@10 metric). Users could now search without knowing the exact keywords. Despite initial cost concerns, text-embedding-3-small's low pricing means we're spending only ~$12/month.",
+        "lang": null
+      }
+    ]
+  },
+  {
+    "slug": "cqrs-mediatr-understanding",
+    "sortOrder": 3,
+    "isFeatured": false,
+    "isPublished": true,
+    "category": ".NET",
+    "color": "#10b981",
+    "publishedAt": null,
+    "tags": [
+      "CQRS",
+      "MediatR",
+      "DDD"
+    ],
+    "dataTr": {
+      "title": "CQRS + MediatR: Komut ve Sorgu Ayrımını Anlamak",
+      "excerpt": "CQRS pattern'ini MediatR kütüphanesiyle nasıl pratik hale getirirsiniz? Teorik bilgiyi gerçek projede uygulayarak edindiğim deneyimler.",
+      "date": "5 Kasım 2025",
+      "readTime": 10
+    },
+    "dataEn": {
+      "title": "CQRS + MediatR: Understanding Command and Query Separation",
+      "excerpt": "How do you make the CQRS pattern practical with the MediatR library? My experience applying theoretical knowledge to a real project.",
+      "date": "November 5, 2025",
+      "readTime": 10
+    },
+    "contentTr": [
+      {
+        "type": "paragraph",
+        "text": "CQRS (Command Query Responsibility Segregation) teoride çok mantıklı görünür: okuma ve yazmayı ayır. Ama pratikte nasıl uygulanır? MediatR bu geçişi inanılmaz kolaylaştırıyor.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Neden CQRS?",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Klasik repository pattern'inde tek bir servis hem GetById hem Create hem Update işini yapar. Bu zamanla \"God Service\" oluşturur. CQRS ile her operasyon kendi handler'ında izole edilir.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Query — sadece okuma, side effect yok\npublic record GetCustomerQuery(Guid Id) : IRequest<CustomerDto>;\n\npublic class GetCustomerQueryHandler : IRequestHandler<GetCustomerQuery, CustomerDto>\n{\n    private readonly IReadDbContext _db; // Read-only context\n\n    public async Task<CustomerDto> Handle(GetCustomerQuery q, CancellationToken ct)\n    {\n        return await _db.Customers\n            .AsNoTracking()\n            .Where(c => c.Id == q.Id)\n            .Select(c => new CustomerDto(c.Id, c.Name, c.Email))\n            .FirstOrDefaultAsync(ct)\n            ?? throw new NotFoundException(q.Id);\n    }\n}\n\n// Command — write, validation, domain logic\npublic record UpdateCustomerEmailCommand(Guid Id, string NewEmail) : IRequest;\n\npublic class UpdateCustomerEmailCommandHandler\n    : IRequestHandler<UpdateCustomerEmailCommand>\n{\n    private readonly ICustomerRepository _repo;\n    private readonly IUnitOfWork _uow;\n\n    public async Task Handle(UpdateCustomerEmailCommand cmd, CancellationToken ct)\n    {\n        var customer = await _repo.GetByIdAsync(cmd.Id, ct)\n            ?? throw new NotFoundException(cmd.Id);\n\n        customer.ChangeEmail(cmd.NewEmail); // Domain method\n        await _uow.SaveChangesAsync(ct);\n    }\n}",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Pipeline Behavior ile Cross-Cutting Concerns",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "MediatR'ın en güçlü özelliklerinden biri Pipeline Behavior. Validation, logging, caching gibi cross-cutting concern'leri tek bir yerde yönetebilirsiniz.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "public class ValidationBehavior<TRequest, TResponse>\n    : IPipelineBehavior<TRequest, TResponse>\n    where TRequest : notnull\n{\n    private readonly IEnumerable<IValidator<TRequest>> _validators;\n\n    public async Task<TResponse> Handle(\n        TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)\n    {\n        if (!_validators.Any()) return await next();\n\n        var context = new ValidationContext<TRequest>(request);\n        var failures = _validators\n            .Select(v => v.Validate(context))\n            .SelectMany(r => r.Errors)\n            .Where(f => f != null)\n            .ToList();\n\n        if (failures.Count > 0)\n            throw new ValidationException(failures);\n\n        return await next();\n    }\n}",
+        "lang": "csharp"
+      }
+    ],
+    "contentEn": [
+      {
+        "type": "paragraph",
+        "text": "CQRS (Command Query Responsibility Segregation) sounds very logical in theory: separate reads and writes. But how do you implement it in practice? MediatR makes this transition incredibly smooth.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "Why CQRS?",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "In classic repository pattern, a single service handles GetById, Create, and Update. Over time this creates \"God Services\". With CQRS, each operation is isolated in its own handler.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Query — read only, no side effects\npublic record GetCustomerQuery(Guid Id) : IRequest<CustomerDto>;\n\npublic class GetCustomerQueryHandler : IRequestHandler<GetCustomerQuery, CustomerDto>\n{\n    private readonly IReadDbContext _db; // Read-only context\n\n    public async Task<CustomerDto> Handle(GetCustomerQuery q, CancellationToken ct)\n    {\n        return await _db.Customers\n            .AsNoTracking()\n            .Where(c => c.Id == q.Id)\n            .Select(c => new CustomerDto(c.Id, c.Name, c.Email))\n            .FirstOrDefaultAsync(ct)\n            ?? throw new NotFoundException(q.Id);\n    }\n}",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Cross-Cutting Concerns with Pipeline Behavior",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "One of MediatR's most powerful features is Pipeline Behavior. It lets you manage cross-cutting concerns like validation, logging, and caching in a single place.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "public class ValidationBehavior<TRequest, TResponse>\n    : IPipelineBehavior<TRequest, TResponse>\n    where TRequest : notnull\n{\n    private readonly IEnumerable<IValidator<TRequest>> _validators;\n\n    public async Task<TResponse> Handle(\n        TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)\n    {\n        if (!_validators.Any()) return await next();\n\n        var failures = _validators\n            .Select(v => v.Validate(new ValidationContext<TRequest>(request)))\n            .SelectMany(r => r.Errors)\n            .Where(f => f != null)\n            .ToList();\n\n        if (failures.Count > 0)\n            throw new ValidationException(failures);\n\n        return await next();\n    }\n}",
+        "lang": "csharp"
+      }
+    ]
+  },
+  {
+    "slug": "health-checks-logging",
+    "sortOrder": 4,
+    "isFeatured": false,
+    "isPublished": true,
+    "category": "DevOps",
+    "color": "#0ea5e9",
+    "publishedAt": null,
+    "tags": [
+      "Health Checks",
+      "Serilog",
+      "Monitoring"
+    ],
+    "dataTr": {
+      "title": ".NET Uygulamalarında Health Checks, Logging ve Monitoring",
+      "excerpt": "Production'da ne olduğunu bilmek, sorun çıkmadan önce müdahale etmekten geçer. ASP.NET Core Health Checks, Serilog yapılandırması ve uygulama izleme pratiklerini paylaşıyorum.",
+      "date": "14 Ekim 2025",
+      "readTime": 14
+    },
+    "dataEn": {
+      "title": "Health Checks, Logging & Monitoring in .NET Applications",
+      "excerpt": "Knowing what happens in production is the key to acting before things break. I share ASP.NET Core Health Checks setup, Serilog configuration, and application monitoring practices.",
+      "date": "October 14, 2025",
+      "readTime": 14
+    },
+    "contentTr": [
+      {
+        "type": "paragraph",
+        "text": "Production'da ne olduğunu bilmek, sorun çıkmadan önce müdahale etmekten geçer. Bir projede deployment sonrası aniden yavaşlayan endpoint'leri ve sessiz sedasız çöken arka plan servislerini ancak kullanıcılar şikayet ettikten sonra fark ediyorduk. Proper monitoring ile bu durumu kökten değiştirdik.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "ASP.NET Core Health Checks",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Health Checks API, uygulamanın ve bağımlılıklarının (veritabanı, cache, dış servisler) durumunu anlık olarak sorgulamanızı sağlar. Kubernetes, load balancer veya izleme araçlarıyla kolayca entegre edilir.",
+        "lang": null
+      },
+      {
+        "type": "note",
+        "text": "/health/live ve /health/ready endpoint'lerini ayırın: liveness uygulamanın ayakta olup olmadığını, readiness ise trafik almaya hazır olup olmadığını belirtir.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Program.cs — Health Check kurulumu\nbuilder.Services.AddHealthChecks()\n    .AddSqlServer(connectionString, name: \"database\", tags: [\"db\"])\n    .AddRedis(redisConnection, name: \"cache\", tags: [\"cache\"])\n    .AddUrlGroup(new Uri(\"https://api.partner.com/ping\"), name: \"partner-api\");\n\napp.MapHealthChecks(\"/health/live\");\napp.MapHealthChecks(\"/health/ready\", new HealthCheckOptions\n{\n    Predicate = check => check.Tags.Contains(\"db\") || check.Tags.Contains(\"cache\"),\n    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse\n});",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Serilog ile Yapılandırılmış Loglama",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Console.WriteLine'dan vazgeçin. Serilog, logları hem konsola hem de Seq, Elasticsearch veya dosyaya yapılandırılmış (structured) biçimde yazar. Filtreleme ve arama çok daha kolay hale gelir.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Program.cs — Serilog kurulumu\nLog.Logger = new LoggerConfiguration()\n    .MinimumLevel.Information()\n    .MinimumLevel.Override(\"Microsoft.AspNetCore\", LogEventLevel.Warning)\n    .Enrich.FromLogContext()\n    .Enrich.WithMachineName()\n    .WriteTo.Console(new JsonFormatter())\n    .WriteTo.Seq(\"http://localhost:5341\")\n    .CreateLogger();\n\nbuilder.Host.UseSerilog();\n\n// Kullanım — property'li structured log\n_logger.LogInformation(\n    \"Order {OrderId} completed for customer {CustomerId} in {ElapsedMs}ms\",\n    order.Id, order.CustomerId, elapsed.TotalMilliseconds);",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Sonuçlar",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Health check endpoint'lerini devreye aldıktan sonra load balancer sağlıklı olmayan instance'ları otomatik devre dışı bırakmaya başladı. Serilog ile yapılandırılmış loglama sayesinde production sorunlarını ortalama 45 dakikadan 8 dakikaya düşürdük. Seq üzerinden filtrelenebilir loglar, debug sürecini tamamen değiştirdi.",
+        "lang": null
+      }
+    ],
+    "contentEn": [
+      {
+        "type": "paragraph",
+        "text": "Knowing what happens in production is the key to acting before things break. On one project, we only discovered slowdowns and silently crashing background services after users complained. Proper monitoring changed that completely.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "ASP.NET Core Health Checks",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "The Health Checks API lets you query the real-time status of your application and its dependencies (database, cache, external services). It integrates seamlessly with Kubernetes, load balancers, and monitoring tools.",
+        "lang": null
+      },
+      {
+        "type": "note",
+        "text": "Separate /health/live and /health/ready endpoints: liveness indicates whether the app is running, readiness indicates whether it can accept traffic.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Program.cs — Health Check setup\nbuilder.Services.AddHealthChecks()\n    .AddSqlServer(connectionString, name: \"database\", tags: [\"db\"])\n    .AddRedis(redisConnection, name: \"cache\", tags: [\"cache\"])\n    .AddUrlGroup(new Uri(\"https://api.partner.com/ping\"), name: \"partner-api\");\n\napp.MapHealthChecks(\"/health/live\");\napp.MapHealthChecks(\"/health/ready\", new HealthCheckOptions\n{\n    Predicate = check => check.Tags.Contains(\"db\") || check.Tags.Contains(\"cache\"),\n    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse\n});",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Structured Logging with Serilog",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Drop Console.WriteLine. Serilog writes logs in structured format to the console, Seq, Elasticsearch, or files. Filtering and searching become dramatically easier.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// Program.cs — Serilog setup\nLog.Logger = new LoggerConfiguration()\n    .MinimumLevel.Information()\n    .MinimumLevel.Override(\"Microsoft.AspNetCore\", LogEventLevel.Warning)\n    .Enrich.FromLogContext()\n    .Enrich.WithMachineName()\n    .WriteTo.Console(new JsonFormatter())\n    .WriteTo.Seq(\"http://localhost:5341\")\n    .CreateLogger();\n\nbuilder.Host.UseSerilog();\n\n// Usage — structured log with properties\n_logger.LogInformation(\n    \"Order {OrderId} completed for customer {CustomerId} in {ElapsedMs}ms\",\n    order.Id, order.CustomerId, elapsed.TotalMilliseconds);",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Results",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "After enabling health check endpoints, the load balancer started automatically removing unhealthy instances from rotation. Structured logging with Serilog cut our average production issue resolution time from 45 minutes to 8 minutes. Filterable logs in Seq completely transformed the debugging experience.",
+        "lang": null
+      }
+    ]
+  },
+  {
+    "slug": "entity-framework-core-performance",
+    "sortOrder": 5,
+    "isFeatured": false,
+    "isPublished": true,
+    "category": ".NET",
+    "color": "#a78bfa",
+    "publishedAt": null,
+    "tags": [
+      "EF Core",
+      "Performance",
+      "PostgreSQL"
+    ],
+    "dataTr": {
+      "title": "Entity Framework Core Performans Tuzakları ve Çözümleri",
+      "excerpt": "N+1 sorunu, eager loading kötüye kullanımı ve yavaş sorgular. EF Core'da farkında olmadan yaptığımız hatalar ve bunları nasıl düzeltiriz.",
+      "date": "1 Eylül 2025",
+      "readTime": 9
+    },
+    "dataEn": {
+      "title": "Entity Framework Core Performance Pitfalls and Solutions",
+      "excerpt": "N+1 problem, misuse of eager loading, and slow queries. Mistakes we unknowingly make in EF Core and how to fix them.",
+      "date": "September 1, 2025",
+      "readTime": 9
+    },
+    "contentTr": [
+      {
+        "type": "paragraph",
+        "text": "EF Core güçlü ve kullanışlı ama yanlış kullanıldığında production veritabanını felç edebilir. Gerçek projelerden derlediğim performans tuzaklarını paylaşıyorum.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "1. N+1 Problemi",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "En yaygın hata. Bir koleksiyonu döngüyle gezerken her iterasyonda ayrı bir sorgu fırlatmak. 100 müşteri varsa 101 sorgu gidebilir.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// ❌ YANLIŞ — N+1 problemi\nvar customers = await db.Customers.ToListAsync();\nforeach (var c in customers)\n{\n    // Her iterasyonda ayrı sorgu!\n    var orders = await db.Orders.Where(o => o.CustomerId == c.Id).ToListAsync();\n}\n\n// ✅ DOĞRU — tek sorguda eager loading\nvar customers = await db.Customers\n    .Include(c => c.Orders)\n    .ToListAsync();\n\n// ✅ DAHA İYİ — projection ile sadece gereken veri\nvar result = await db.Customers\n    .Select(c => new CustomerWithOrderCountDto\n    {\n        Id = c.Id,\n        Name = c.Name,\n        OrderCount = c.Orders.Count\n    })\n    .ToListAsync();",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "2. AsNoTracking'i Unutmak",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Read-only sorgularda EF Core entity'leri change tracker'a ekler. Bu gereksiz bellek ve CPU kullanımı demek. Okuma sorgularında her zaman AsNoTracking() kullanın.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// ❌ Gereksiz tracking — sadece okuyacaksak\nvar products = await db.Products.Where(p => p.IsActive).ToListAsync();\n\n// ✅ Doğru — tracking yok, daha hızlı\nvar products = await db.Products\n    .AsNoTracking()\n    .Where(p => p.IsActive)\n    .ToListAsync();",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "3. Select Yerine Tüm Entity'yi Çekmek",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Customer entity'nizde 30 kolon var ama ekranda sadece isim ve email göstereceksiniz. SELECT * yapmak yerine projeksiyon kullanın.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// ❌ 30 kolon çekiyoruz, 2 tane kullanıyoruz\nvar customers = await db.Customers.ToListAsync();\nvar names = customers.Select(c => c.Name);\n\n// ✅ Sadece gereken kolonlar\nvar names = await db.Customers\n    .Select(c => new { c.Name, c.Email })\n    .ToListAsync();",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Sonuç",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Bu üç hatayı düzelttikten sonra bir raporlama endpoint'inin response süresi 4200ms'den 180ms'ye düştü. EF Core'u suçlamadan önce ürettiği SQL'leri inceleyin — MiniProfiler veya EF Core logging ile bunu kolayca yapabilirsiniz.",
+        "lang": null
+      }
+    ],
+    "contentEn": [
+      {
+        "type": "paragraph",
+        "text": "EF Core is powerful and convenient, but when misused it can cripple a production database. Here are the performance pitfalls I've collected from real projects.",
+        "lang": null
+      },
+      {
+        "type": "heading",
+        "text": "1. The N+1 Problem",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "The most common mistake. Firing a separate query on each iteration while looping through a collection. With 100 customers, that's 101 queries.",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// ❌ WRONG — N+1 problem\nvar customers = await db.Customers.ToListAsync();\nforeach (var c in customers)\n{\n    // Separate query on every iteration!\n    var orders = await db.Orders.Where(o => o.CustomerId == c.Id).ToListAsync();\n}\n\n// ✅ CORRECT — eager loading in a single query\nvar customers = await db.Customers\n    .Include(c => c.Orders)\n    .ToListAsync();\n\n// ✅ BETTER — projection with only required data\nvar result = await db.Customers\n    .Select(c => new CustomerWithOrderCountDto\n    {\n        Id = c.Id,\n        Name = c.Name,\n        OrderCount = c.Orders.Count\n    })\n    .ToListAsync();",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "2. Forgetting AsNoTracking",
+        "lang": null
+      },
+      {
+        "type": "code",
+        "text": "// ❌ Unnecessary tracking — if we're only reading\nvar products = await db.Products.Where(p => p.IsActive).ToListAsync();\n\n// ✅ Correct — no tracking, faster\nvar products = await db.Products\n    .AsNoTracking()\n    .Where(p => p.IsActive)\n    .ToListAsync();",
+        "lang": "csharp"
+      },
+      {
+        "type": "heading",
+        "text": "Results",
+        "lang": null
+      },
+      {
+        "type": "paragraph",
+        "text": "Fixing these three issues reduced a reporting endpoint's response time from 4200ms to 180ms. Before blaming EF Core, examine the SQL it generates — MiniProfiler or EF Core logging makes this easy.",
+        "lang": null
+      }
+    ]
+  }
+]

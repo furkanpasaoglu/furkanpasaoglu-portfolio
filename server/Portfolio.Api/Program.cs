@@ -1,0 +1,195 @@
+using System.Text;
+using System.Threading.RateLimiting;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Npgsql;
+using Scalar.AspNetCore;
+using Portfolio.Api.Data;
+using Portfolio.Api.Endpoints;
+using Portfolio.Api.Options;
+using Portfolio.Api.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ── Options ──────────────────────────────────────────────────────────
+builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Secret), "Jwt:Secret must be configured.")
+    .ValidateOnStart();
+
+builder.Services
+    .AddOptions<AdminOptions>()
+    .Bind(builder.Configuration.GetSection(AdminOptions.SectionName))
+    .ValidateOnStart();
+
+var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()!;
+
+// ── Database ─────────────────────────────────────────────────────────
+var connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? throw new InvalidOperationException("ConnectionStrings:Default not configured.");
+
+var npgsqlDataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+npgsqlDataSourceBuilder.EnableDynamicJson(); // POCO <-> jsonb auto-serialize
+var npgsqlDataSource = npgsqlDataSourceBuilder.Build();
+
+builder.Services.AddSingleton(npgsqlDataSource);
+builder.Services.AddDbContext<AppDbContext>(opts => opts.UseNpgsql(npgsqlDataSource));
+
+// ── Services ─────────────────────────────────────────────────────────
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<ISeeder, Seeder>();
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
+builder.Services.AddOptions<WebStaticOptions>()
+    .Bind(builder.Configuration.GetSection(WebStaticOptions.SectionName));
+builder.Services.AddScoped<ISiteRenderer, SiteRenderer>();
+builder.Services.AddHostedService<SiteRendererBootstrap>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddHostedService<MessageCleanupService>();
+
+// ── Authentication (JWT via cookie) ──────────────────────────────────
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSection.Issuer,
+            ValidAudience = jwtSection.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection.Secret)),
+            ClockSkew = TimeSpan.FromSeconds(30),
+        };
+
+        // Read JWT from pf_access cookie instead of Authorization header
+        o.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                if (ctx.Request.Cookies.TryGetValue("pf_access", out var t) && !string.IsNullOrEmpty(t))
+                {
+                    ctx.Token = t;
+                }
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// ── Rate limiting (5/min on login) ───────────────────────────────────
+builder.Services.AddRateLimiter(opts =>
+{
+    opts.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    opts.AddPolicy("login", http =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: http.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+    opts.AddPolicy("contact", http =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: http.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+});
+
+// ── CORS (dev only: vite on 5173 talking to api on 8080) ─────────────
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
+        .WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175",
+                     "http://localhost:5176", "http://localhost:5177", "http://localhost:5178",
+                     "http://localhost:5179", "http://localhost:5180", "http://localhost:5181")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials()));
+}
+
+builder.Services.AddOpenApi();
+
+var app = builder.Build();
+
+// ── Migrate + seed on startup ────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+
+    var seeder = scope.ServiceProvider.GetRequiredService<ISeeder>();
+    await seeder.SeedAsync();
+    // No initial render here: nginx container seeds the volume with built index.html
+    // (correct CSS/JS asset hashes). Admin save or explicit re-render triggers dynamic render
+    // once the volume is known-populated.
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference(options => options
+        .WithTitle("Portfolio API")
+        .WithTheme(ScalarTheme.DeepSpace)
+        .WithDefaultHttpClient(ScalarTarget.Shell, ScalarClient.Curl));
+    app.UseCors();
+}
+
+app.UseRateLimiter();
+
+// Serve uploaded files at /media/* (e.g. /media/cv.pdf)
+var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
+Directory.CreateDirectory(uploadsPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = "/media",
+});
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseMiddleware<MaintenanceMiddleware>();
+
+// Health
+app.MapGet("/api/health", async (AppDbContext db) =>
+{
+    try
+    {
+        var canConnect = await db.Database.CanConnectAsync();
+        return Results.Ok(new { status = canConnect ? "ok" : "degraded", db = canConnect });
+    }
+    catch
+    {
+        return Results.Ok(new { status = "degraded", db = false });
+    }
+}).WithTags("Health");
+
+app.MapAuthEndpoints();
+app.MapProjectsEndpoints();
+app.MapExperienceEndpoints();
+app.MapSkillsEndpoints();
+app.MapBlogEndpoints();
+app.MapTranslationsEndpoints();
+app.MapPersonalEndpoints();
+app.MapUploadsEndpoints();
+app.MapSiteSettingsEndpoints();
+app.MapContactEndpoints();
+app.MapSystemInfoEndpoints();
+
+app.Run();

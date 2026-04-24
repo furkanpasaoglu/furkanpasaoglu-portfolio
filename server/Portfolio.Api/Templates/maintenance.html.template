@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{SITE.TITLE_EN}} — Maintenance</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="{{SITE.THEME_COLOR}}" />
+    <link rel="icon" type="image/svg+xml" href="{{SITE.FAVICON_URL}}" />
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100vh;
+        display: flex; align-items: center; justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+        background: radial-gradient(1200px 600px at 50% 10%, #1b1e3d 0%, #0b0d20 60%, #07081a 100%);
+        color: #e9ecff;
+        padding: 24px;
+      }
+      main {
+        max-width: 600px; width: 100%;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        padding: 40px 32px;
+        text-align: center;
+        backdrop-filter: blur(8px);
+      }
+      h1 { margin: 0 0 12px; font-size: 28px; font-weight: 600; }
+      p  { margin: 0 0 16px; line-height: 1.55; opacity: 0.86; white-space: pre-line; }
+      .lang { margin-top: 24px; font-size: 14px; opacity: 0.7; }
+      .lang button {
+        background: none; border: 1px solid rgba(255,255,255,0.15);
+        color: inherit; border-radius: 8px; padding: 4px 10px; margin: 0 4px;
+        cursor: pointer; font-size: 13px;
+      }
+      .lang button[aria-pressed="true"] { background: rgba(255,255,255,0.08); }
+      [data-lang="tr"] { display: none; }
+      html[lang="tr"] [data-lang="en"] { display: none; }
+      html[lang="tr"] [data-lang="tr"] { display: block; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 data-lang="en">Under Maintenance</h1>
+      <h1 data-lang="tr">Bakım Çalışması</h1>
+      <p data-lang="en">{{SITE.MAINTENANCE_MESSAGE_EN}}</p>
+      <p data-lang="tr">{{SITE.MAINTENANCE_MESSAGE_TR}}</p>
+      <div class="lang">
+        <button type="button" onclick="document.documentElement.setAttribute('lang','en');this.setAttribute('aria-pressed','true');this.nextElementSibling.setAttribute('aria-pressed','false');" aria-pressed="true">EN</button>
+        <button type="button" onclick="document.documentElement.setAttribute('lang','tr');this.setAttribute('aria-pressed','true');this.previousElementSibling.setAttribute('aria-pressed','false');" aria-pressed="false">TR</button>
+      </div>
+    </main>
+  </body>
+</html>

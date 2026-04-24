@@ -1,4 +1,4 @@
-# Logs
+# ── Client (Node / Vite) ──
 logs
 *.log
 npm-debug.log*
@@ -12,13 +12,39 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
+# ── Server (.NET) ──
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userprefs
+.vs/
+
+# ── Runtime / secrets ──
+.env
+.env.local
+.env.*.local
+uploads/
+
+# ── Database volume (docker local) ──
+pgdata/
+
+# ── Editor ──
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
-*.suo
 *.ntvs*
 *.njsproj
-*.sln
+*.sln.lock
 *.sw?
+
+# ── Docker ──
+# Local dev overrides must be copied from docker-compose.override.yml.example.
+# Do NOT commit the real override file — it exposes Postgres/API ports to the host
+# and would open those same ports in prod (Dokploy, etc.).
+docker-compose.override.yml
+
+# ── Tool caches ──
+.vite/
+.claude/

@@ -1,0 +1,24 @@
+# Local dev overrides.
+#
+# USAGE: `cp docker-compose.override.yml.example docker-compose.override.yml`
+# The real override file is gitignored so it can't leak to prod.
+#
+# WARNING: Ports declared here are bound on the host. On a VPS (Dokploy etc.)
+# this would make Postgres and the API world-reachable — never commit this file.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"   # loopback-only so only your machine can hit it
+
+  server:
+    ports:
+      - "127.0.0.1:8080:8080"   # loopback-only; nginx container still reaches it via the internal network
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+  client:
+    # Expose the SPA on the host for local access. In prod (Dokploy/Traefik)
+    # the base compose does not publish this port — the reverse proxy reaches
+    # the container via the internal docker network instead.
+    ports:
+      - "${CLIENT_PORT:-80}:80"

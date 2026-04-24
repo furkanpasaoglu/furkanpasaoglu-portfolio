@@ -1,0 +1,103 @@
+{
+  "dataTr": {
+    "title": "Furkan Paşaoğlu | Kıdemli Yazılım Geliştirici — İstanbul",
+    "description": "Furkan Paşaoğlu — İstanbul'da Kıdemli Yazılım Geliştirici. 5+ yıl deneyim, 30+ kurumsal proje. C#, .NET Core, ASP.NET, Mikroservisler, Clean Architecture ve Azure DevOps uzmanı.",
+    "keywords": "Furkan Paşaoğlu, Kıdemli Yazılım Geliştirici, C# Geliştirici, ASP.NET Core, Backend Geliştirici İstanbul, Mikroservisler, Clean Architecture, Azure DevOps",
+    "ogTitle": "Furkan Paşaoğlu | Kıdemli Yazılım Geliştirici",
+    "ogDescription": "İstanbul'da Kıdemli Yazılım Geliştirici. 5+ yıl, 30+ kurumsal proje. C#, .NET Core, Mikroservisler, Clean Architecture, Azure DevOps.",
+    "ogImageAlt": "Furkan Paşaoğlu — Kıdemli Yazılım Geliştirici Portfolyosu",
+    "twitterTitle": "Furkan Paşaoğlu | Kıdemli Yazılım Geliştirici",
+    "twitterDescription": "İstanbul'da Kıdemli Yazılım Geliştirici. 5+ yıl, 30+ kurumsal proje.",
+    "siteName": "Furkan Paşaoğlu Portfolyo",
+    "ogLocale": "tr_TR"
+  },
+  "dataEn": {
+    "title": "Furkan Paşaoğlu | Senior Software Developer — Istanbul",
+    "description": "Furkan Paşaoğlu — Senior Software Developer in Istanbul. 5+ years, 30+ enterprise projects. Expert in C#, .NET Core, ASP.NET, Microservices, Clean Architecture and Azure DevOps.",
+    "keywords": "Furkan Paşaoğlu, Furkan Pasaoglu, Senior Software Developer, C# Developer, ASP.NET Core Developer, Backend Developer Istanbul, Microservices Developer, Clean Architecture, Azure DevOps, Enterprise Software Developer Turkey, .NET Core Developer",
+    "ogTitle": "Furkan Paşaoğlu | Senior Software Developer",
+    "ogDescription": "Senior Software Developer in Istanbul. 5+ years, 30+ enterprise projects. C#, .NET Core, Microservices, Clean Architecture, Azure DevOps.",
+    "ogImageAlt": "Furkan Paşaoğlu — Senior Software Developer Portfolio",
+    "twitterTitle": "Furkan Paşaoğlu | Senior Software Developer",
+    "twitterDescription": "Senior Software Developer in Istanbul. 5+ years, 30+ enterprise projects. C#, .NET Core, Microservices, Clean Architecture.",
+    "siteName": "Furkan Paşaoğlu Portfolio",
+    "ogLocale": "en_US"
+  },
+  "branding": {
+    "canonicalBaseUrl": "https://furkanpasaoglu.com",
+    "themeColor": "#0ea5e9",
+    "faviconUrl": "/favicon.svg",
+    "ogImageUrl": "https://furkanpasaoglu.com/og-image.png",
+    "ogImageWidth": 1200,
+    "ogImageHeight": 630,
+    "twitterImageUrl": "https://furkanpasaoglu.com/og-image.png",
+    "twitterCard": "summary_large_image",
+    "googleSiteVerification": "",
+    "robotsIndex": true,
+    "robotsFollow": true,
+    "sitemapChangefreq": "monthly",
+    "sitemapPriority": 1.0
+  },
+  "schema": {
+    "firstName": "Furkan",
+    "lastName": "Paşaoğlu",
+    "email": "furkan.pasaoglu99@gmail.com",
+    "addressCountry": "TR",
+    "dateCreated": "2025-01-01",
+    "sameAs": [
+      "https://github.com/furkanpasaoglu",
+      "https://www.linkedin.com/in/furkanpasaoglu/"
+    ],
+    "jobTitle_tr": "Kıdemli Yazılım Geliştirici",
+    "jobTitle_en": "Senior Software Developer",
+    "personDescription_tr": "İstanbul'da 5+ yıl kurumsal deneyime sahip Kıdemli .NET Backend Geliştirici. C#, .NET Core, ASP.NET, Mikroservisler, Clean Architecture, Azure DevOps ve sistem entegrasyonu uzmanlığı. Farklı sektörlerde 30+ kurumsal projeye katkı.",
+    "personDescription_en": "Senior .NET Backend Developer in Istanbul with 5+ years of enterprise experience. Specializing in C#, .NET Core, ASP.NET, Microservices, Clean Architecture, Azure DevOps and system integrations. Contributed to 30+ enterprise projects across multiple industries.",
+    "addressLocality_tr": "İstanbul",
+    "addressLocality_en": "Istanbul",
+    "knowsAbout_tr": ["C#", ".NET Core", "ASP.NET", "Mikroservisler", "Clean Architecture", "Azure DevOps", "Docker", "RabbitMQ", "MSSQL", "PostgreSQL", "MongoDB", "Redis", "Jenkins", "Angular", "Microsoft Dynamics 365", "SAP Entegrasyonu"],
+    "knowsAbout_en": ["C#", ".NET Core", "ASP.NET", "Microservices", "Clean Architecture", "Azure DevOps", "Docker", "RabbitMQ", "MSSQL", "PostgreSQL", "MongoDB", "Redis", "Jenkins", "Angular", "Microsoft Dynamics 365", "SAP Integration"],
+    "worksForName_tr": "Bilgi Birikim Sistemleri",
+    "worksForName_en": "Bilgi Birikim Sistemleri",
+    "alumniOfName_tr": "Kodlama.io Senior Software Developer Bootcamp",
+    "alumniOfName_en": "Kodlama.io Senior Software Developer Bootcamp"
+  },
+  "operations": {
+    "maintenanceMode": false,
+    "maintenanceMessage_tr": "Sitede bakım çalışması var. Kısa süre içinde tekrar yayında olacağız.",
+    "maintenanceMessage_en": "The site is currently under maintenance. We'll be back shortly.",
+    "sectionsEnabled": {
+      "hero": true, "about": true, "skills": true,
+      "projects": true, "experience": true, "blog": true, "contact": true
+    },
+    "analytics": { "enabled": false, "ga4MeasurementId": "", "gtmContainerId": "" }
+  },
+  "security": {
+    "csp": {
+      "defaultSrc": ["'self'"],
+      "scriptSrc":  ["'self'", "'unsafe-inline'"],
+      "styleSrc":   ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      "fontSrc":    ["'self'", "https://fonts.gstatic.com"],
+      "imgSrc":     ["'self'", "data:", "https:"],
+      "connectSrc": ["'self'"],
+      "frameSrc":   []
+    },
+    "robotsExtraDirectives": ["Disallow: /admin/"]
+  },
+  "communications": {
+    "smtp": {
+      "enabled": false,
+      "host": "", "port": 587,
+      "username": "", "password": "",
+      "fromAddress": "", "fromName": "Furkan Paşaoğlu",
+      "useStartTls": true
+    },
+    "autoReply": {
+      "enabled": true,
+      "subject_tr": "Mesajınızı aldım",
+      "subject_en": "Got your message",
+      "body_tr": "Merhaba {name},\n\nMesajınızı aldım, en geç 24 saat içinde size döneceğim.\n\nTeşekkürler,\nFurkan Paşaoğlu",
+      "body_en": "Hi {name},\n\nI got your message — I'll get back to you within 24 hours.\n\nThanks,\nFurkan Paşaoğlu"
+    },
+    "adminNotifyEmail": "furkan.pasaoglu99@gmail.com"
+  }
+}

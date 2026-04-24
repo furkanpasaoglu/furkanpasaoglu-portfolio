@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{SITE.FAVICON_URL}}" />
+    <link rel="apple-touch-icon" href="{{SITE.FAVICON_URL}}" />
+
+    <!-- Primary Meta -->
+    <title>{{SITE.TITLE_EN}}</title>
+    <meta name="description" content="{{SITE.DESC_EN}}" />
+    <meta name="keywords" content="{{SITE.KEYWORDS_EN}}" />
+    <meta name="author" content="{{SCHEMA.AUTHOR_NAME}}" />
+    <meta name="robots" content="{{SITE.ROBOTS_META}}" />
+    <meta name="theme-color" content="{{SITE.THEME_COLOR}}" />
+    <meta name="format-detection" content="telephone=no" />
+    {{SITE.GOOGLE_VERIFICATION_META}}
+    <link rel="canonical" href="{{SITE.CANONICAL_BASE}}/" />
+
+    <!-- hreflang — Bilingual EN / TR -->
+    <link rel="alternate" hreflang="en" href="{{SITE.CANONICAL_BASE}}/" />
+    <link rel="alternate" hreflang="tr" href="{{SITE.CANONICAL_BASE}}/" />
+    <link rel="alternate" hreflang="x-default" href="{{SITE.CANONICAL_BASE}}/" />
+
+    <!-- Open Graph / LinkedIn / Facebook -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:url" content="{{SITE.CANONICAL_BASE}}/" />
+    <meta property="og:title" content="{{SITE.OG_TITLE_EN}}" />
+    <meta property="og:description" content="{{SITE.OG_DESC_EN}}" />
+    <meta property="og:image" content="{{SITE.OG_IMAGE_URL}}" />
+    <meta property="og:image:width" content="{{SITE.OG_IMAGE_WIDTH}}" />
+    <meta property="og:image:height" content="{{SITE.OG_IMAGE_HEIGHT}}" />
+    <meta property="og:image:alt" content="{{SITE.OG_IMAGE_ALT_EN}}" />
+    <meta property="og:locale" content="{{SITE.OG_LOCALE_EN}}" />
+    <meta property="og:locale:alternate" content="{{SITE.OG_LOCALE_TR}}" />
+    <meta property="og:site_name" content="{{SITE.SITE_NAME_EN}}" />
+    <meta property="profile:first_name" content="{{SCHEMA.FIRST_NAME}}" />
+    <meta property="profile:last_name" content="{{SCHEMA.LAST_NAME}}" />
+    <meta property="profile:username" content="furkanpasaoglu" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="{{SITE.TWITTER_CARD}}" />
+    <meta name="twitter:url" content="{{SITE.CANONICAL_BASE}}/" />
+    <meta name="twitter:title" content="{{SITE.TWITTER_TITLE_EN}}" />
+    <meta name="twitter:description" content="{{SITE.TWITTER_DESC_EN}}" />
+    <meta name="twitter:image" content="{{SITE.TWITTER_IMAGE_URL}}" />
+    <meta name="twitter:image:alt" content="{{SITE.OG_IMAGE_ALT_EN}}" />
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json">{{SCHEMA.PROFILEPAGE_JSON}}</script>
+    <script type="application/ld+json">{{SCHEMA.WEBSITE_JSON}}</script>
+
+    <!-- Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://github.com" />
+    <link rel="dns-prefetch" href="https://www.linkedin.com" />
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="{{SITE.CSP_CONTENT}}" />
+
+    {{ASSET.MAIN_CSS_LINK}}
+
+    {{SITE.ANALYTICS_HEAD}}
+  </head>
+  <body>
+    {{SITE.GTM_NOSCRIPT}}
+    <div id="root"></div>
+    <script type="module" src="{{ASSET.MAIN_JS}}"></script>
+  </body>
+</html>

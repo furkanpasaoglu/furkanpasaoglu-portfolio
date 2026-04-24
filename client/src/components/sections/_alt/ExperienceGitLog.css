@@ -1,0 +1,491 @@
+/* ── Terminal log header ── */
+.xp-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  margin-bottom: 28px;
+  border-radius: 10px;
+  background: rgba(10, 13, 31, 0.55);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+[data-theme='light'] .xp-log-head {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.xp-log-cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-soft);
+}
+
+.xp-log-prompt {
+  color: var(--accent-b);
+  font-weight: 600;
+}
+
+.xp-log-flag {
+  color: var(--accent-a);
+  opacity: 0.85;
+}
+
+.xp-log-branch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-d);
+  font-size: 11.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.08);
+  border: 1px solid rgba(94, 234, 212, 0.3);
+}
+
+.xp-log-branch-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-d);
+  box-shadow: 0 0 8px var(--accent-d);
+}
+
+/* ── Log container ── */
+.xp-log {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-left: 4px;
+}
+
+.xp-row {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 8px;
+}
+
+/* ── Graph ── */
+.xp-graph {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+  min-height: 100%;
+}
+
+.xp-graph-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent-a);
+  z-index: 2;
+  box-shadow: 0 0 12px rgba(196, 113, 245, 0.5);
+  flex: none;
+}
+
+.xp-graph-dot::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--grad-liquid);
+  background-size: 200% 200%;
+  animation: gradient-move 5s ease-in-out infinite;
+}
+
+.xp-graph-line {
+  position: absolute;
+  top: 26px;
+  bottom: -8px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(to bottom, var(--accent-a), var(--border));
+  opacity: 0.6;
+  z-index: 1;
+  border-radius: 2px;
+}
+
+/* ── Commit block ── */
+.xp-commit {
+  width: 100%;
+  text-align: left;
+  padding: 20px 22px;
+  border-radius: 12px;
+  background: rgba(10, 13, 31, 0.45);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  cursor: pointer;
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  transition:
+    background 0.3s var(--ease),
+    border-color 0.3s var(--ease),
+    transform 0.35s var(--ease);
+}
+
+[data-theme='light'] .xp-commit {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.xp-commit:hover {
+  border-color: var(--accent-a);
+  background: rgba(10, 13, 31, 0.6);
+  transform: translateY(-2px);
+}
+
+[data-theme='light'] .xp-commit:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Hash row ── */
+.xp-commit-hash-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.xp-commit-token {
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.xp-commit-hash {
+  color: #fbbf24;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.xp-commit-refs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.xp-commit-paren {
+  color: var(--text-dim);
+}
+
+.xp-ref {
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.xp-ref-head {
+  color: #fa71cd;
+  background: rgba(250, 113, 205, 0.1);
+  border: 1px solid rgba(250, 113, 205, 0.3);
+}
+
+.xp-ref-arrow {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.xp-ref-branch {
+  color: #5eead4;
+  background: rgba(94, 234, 212, 0.1);
+  border: 1px solid rgba(94, 234, 212, 0.3);
+}
+
+.xp-ref-remote {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.xp-ref-sep {
+  color: var(--text-dim);
+}
+
+/* ── Meta rows (Author, Date) ── */
+.xp-commit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-soft);
+  font-size: 12.5px;
+}
+
+.xp-meta-key {
+  color: var(--text-dim);
+  margin-right: 4px;
+}
+
+.xp-meta-val {
+  color: var(--text);
+}
+
+.xp-meta-sep {
+  color: var(--text-dim);
+  margin: 0 6px;
+}
+
+.xp-meta-type {
+  color: var(--accent-b);
+  font-size: 11.5px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(123, 215, 255, 0.08);
+  border: 1px solid rgba(123, 215, 255, 0.25);
+}
+
+/* ── Commit message ── */
+.xp-commit-msg {
+  margin: 14px 0 6px;
+  padding-left: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text);
+  display: block;
+}
+
+.xp-commit-prefix {
+  font-weight: 600;
+}
+
+.xp-commit-prefix.prefix-feat {
+  color: #c471f5;
+}
+
+.xp-commit-prefix.prefix-edu {
+  color: #f59e0b;
+}
+
+.xp-commit-colon {
+  color: var(--text-dim);
+  margin-right: 6px;
+}
+
+.xp-commit-subject {
+  color: var(--text);
+}
+
+.xp-commit-company {
+  padding-left: 20px;
+  color: var(--text-soft);
+  font-size: 12.5px;
+  margin-bottom: 10px;
+}
+
+.xp-commit-company span {
+  color: var(--accent-a);
+  font-weight: 500;
+}
+
+.xp-commit-desc {
+  padding-left: 20px;
+  color: var(--text-soft);
+  font-size: 12.5px;
+  line-height: 1.75;
+  margin: 8px 0 14px;
+  font-family: var(--font-sans);
+}
+
+/* ── Tech chips ── */
+.xp-commit-tech {
+  padding-left: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.xp-commit-chip {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 3px 9px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-soft);
+  letter-spacing: 0.02em;
+}
+
+[data-theme='light'] .xp-commit-chip {
+  background: rgba(10, 13, 31, 0.04);
+}
+
+.xp-commit-chip.more {
+  color: var(--accent-b);
+  border-color: rgba(123, 215, 255, 0.3);
+  background: rgba(123, 215, 255, 0.06);
+}
+
+/* ── CTA ── */
+.xp-commit-cta {
+  padding-left: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--accent-b);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: gap 0.3s var(--ease);
+}
+
+.xp-commit-cta-arrow {
+  color: var(--text-dim);
+}
+
+.xp-commit-cta-icon {
+  transition: transform 0.3s var(--ease);
+}
+
+.xp-commit:hover .xp-commit-cta {
+  gap: 10px;
+}
+
+.xp-commit:hover .xp-commit-cta-icon {
+  transform: translateX(3px);
+}
+
+/* ── Detail panel (unchanged styling) ── */
+.xp-detail-head {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.xp-detail-period {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-b);
+  margin-bottom: 10px;
+}
+
+.xp-detail-title {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 8px;
+  background: var(--grad-liquid);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.xp-detail-company {
+  color: var(--accent-a);
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+.xp-detail-desc {
+  color: var(--text-soft);
+  line-height: 1.75;
+  margin-bottom: 28px;
+}
+
+.xp-detail-section {
+  margin-bottom: 28px;
+}
+
+.xp-detail-section h4 {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-b);
+  margin-bottom: 14px;
+}
+
+.xp-detail-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.xp-detail-list li {
+  position: relative;
+  padding-left: 22px;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.xp-detail-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--grad-liquid);
+  box-shadow: 0 0 10px rgba(196, 113, 245, 0.5);
+}
+
+.xp-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.xp-detail-tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-soft);
+}
+
+@media (max-width: 640px) {
+  .xp-log-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 11.5px;
+    padding: 10px 14px;
+  }
+  .xp-row {
+    grid-template-columns: 24px 1fr;
+    gap: 10px;
+  }
+  .xp-commit {
+    padding: 16px 16px;
+    font-size: 12px;
+  }
+  .xp-commit-msg,
+  .xp-commit-company,
+  .xp-commit-desc,
+  .xp-commit-tech,
+  .xp-commit-cta {
+    padding-left: 0;
+  }
+  .xp-commit-hash-row {
+    font-size: 11.5px;
+  }
+  .xp-graph-dot {
+    width: 12px;
+    height: 12px;
+  }
+}

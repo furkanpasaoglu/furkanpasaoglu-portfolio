@@ -1,0 +1,295 @@
+[
+  {
+    "section": "nav",
+    "dataTr": {
+      "about": "Hakkımda",
+      "skills": "Yetenekler",
+      "projects": "Projeler",
+      "experience": "Deneyim",
+      "blog": "Blog",
+      "contact": "İletişim",
+      "resume": "CV"
+    },
+    "dataEn": {
+      "about": "About",
+      "skills": "Skills",
+      "projects": "Projects",
+      "experience": "Experience",
+      "blog": "Blog",
+      "contact": "Contact",
+      "resume": "Resume"
+    }
+  },
+  {
+    "section": "hero",
+    "dataTr": {
+      "greeting": "Merhaba, Ben",
+      "name": "Furkan Paşaoğlu",
+      "subtitle": "Senior Software Developer",
+      "desc": "30’dan fazla kurumsal projede üretim ortamında çalışan web ve backend sistemler geliştirdim. .NET ekosisteminde web uygulamaları, servis tabanlı mimariler, entegrasyon çözümleri ve otomasyon süreçleri üzerine çalışıyorum.",
+      "cta1": "Projelerimi Gör",
+      "cta2": "İletişime Geç"
+    },
+    "dataEn": {
+      "greeting": "Hey, I'm",
+      "name": "Furkan Paşaoğlu",
+      "subtitle": "Senior Software Developer",
+      "desc": "I have worked on more than 30 enterprise projects, developing web and backend systems running in production environments. Within the .NET ecosystem, I focus on web applications, service-oriented architectures, system integrations, and automation processes.",
+      "cta1": "View My Projects",
+      "cta2": "Get In Touch"
+    }
+  },
+  {
+    "section": "about",
+    "dataTr": {
+      "tag": "// hakkımda",
+      "title": "Hakkımda",
+      "p1": "Merhaba! Ben Furkan — kurumsal ölçekte aktif olarak kullanılan sistemler geliştiren bir .NET Backend Developer’ım. 30’dan fazla projede web ve backend çözümler üzerinde aktif rol aldım.",
+      "p2": "ASP.NET ve .NET Core ekosisteminde servis tabanlı mimariler, sistem entegrasyonları ve sürdürülebilir backend çözümleri geliştiriyorum. Farklı sektörlerde ihtiyaçlara uygun entegrasyon çözümleri tasarladım ve uyguladım. CI/CD süreçleri ve canlı sistem operasyonlarında deneyim sahibiyim.",
+      "p3": "Temiz kod prensiplerine önem veriyor, performans ve sürdürülebilirlik odaklı sistemler tasarlıyorum. Takım içinde teknik sorumluluk alarak geliştirme süreçlerine katkı sağlıyorum.",
+      "cta1": "Seninle Çalışalım",
+      "cta2": "CV İndir",
+      "stats": [
+        {
+          "label": "2021",
+          "desc": "Profesyonel Kariyer Başlangıcı"
+        },
+        {
+          "label": "30+",
+          "desc": "Kurumsal Proje Deneyimi"
+        },
+        {
+          "label": ".NET / C#",
+          "desc": "Ana Uzmanlık Alanı"
+        },
+        {
+          "label": "Backend & Yapay Zeka",
+          "desc": "Odak Alanı"
+        }
+      ]
+    },
+    "dataEn": {
+      "tag": "// about",
+      "title": "About",
+      "p1": "Hi! I'm Furkan — a .NET Backend Developer building enterprise-scale systems actively used in real-world environments. I have taken part in more than 30 projects, contributing to web and backend solutions.",
+      "p2": "Within the ASP.NET and .NET Core ecosystem, I develop service-oriented architectures, system integrations, and sustainable backend solutions. I have designed and implemented integration solutions across different industries. I also have experience with CI/CD processes and live system operations.",
+      "p3": "I value clean code principles and focus on building performance-driven and maintainable systems. I actively contribute to development processes and take technical responsibility within teams.",
+      "cta1": "Let’s Work Together",
+      "cta2": "Download Resume",
+      "stats": [
+        {
+          "label": "2021",
+          "desc": "Professional Career Start"
+        },
+        {
+          "label": "30+",
+          "desc": "Enterprise Projects"
+        },
+        {
+          "label": ".NET / C#",
+          "desc": "Core Expertise"
+        },
+        {
+          "label": "Backend & AI",
+          "desc": "Primary Focus"
+        }
+      ]
+    }
+  },
+  {
+    "section": "skills",
+    "dataTr": {
+      "tag": "// teknoloji yığını",
+      "title": "Yetenekler",
+      "desc": "Kurumsal yazılım geliştirme sürecinde aktif olarak kullandığım teknolojiler ve araçlar.",
+      "tiers": {
+        "expert": "Uzman",
+        "proficient": "Yetkin",
+        "familiar": "Öğreniliyor"
+      }
+    },
+    "dataEn": {
+      "tag": "// tech stack",
+      "title": "Skills",
+      "desc": "Technologies and tools I actively use in enterprise software development.",
+      "tiers": {
+        "expert": "Expert",
+        "proficient": "Proficient",
+        "familiar": "Familiar"
+      }
+    }
+  },
+  {
+    "section": "projects",
+    "dataTr": {
+      "tag": "// seçilen çalışmalar",
+      "title": "Projeler",
+      "desc": "Çeşitli sektörler için geliştirdiğim kurumsal ve açık kaynak projelerden seçkiler.",
+      "viewGithub": "Tüm Projeleri GitHub'da Gör",
+      "modal": {
+        "techStack": "Teknoloji Yığını",
+        "highlights": "Öne Çıkanlar",
+        "github": "GitHub'da Gör",
+        "live": "Canlıyı Gör",
+        "close": "Kapat",
+        "status": "Durum",
+        "type": "Tip"
+      }
+    },
+    "dataEn": {
+      "tag": "// selected work",
+      "title": "Projects",
+      "desc": "Selected enterprise and open-source projects built across various industries.",
+      "viewGithub": "View All Projects on GitHub",
+      "modal": {
+        "techStack": "Tech Stack",
+        "highlights": "Highlights",
+        "github": "View on GitHub",
+        "live": "View Live",
+        "close": "Close",
+        "status": "Status",
+        "type": "Type"
+      }
+    }
+  },
+  {
+    "section": "experience",
+    "dataTr": {
+      "tag": "// kariyer geçmişi",
+      "title": "Deneyim",
+      "desc": "Kurumsal yazılım geliştirme alanındaki profesyonel kariyer yolculuğum.",
+      "modal": {
+        "highlights": "Öne Çıkanlar",
+        "techStack": "Teknoloji Yığını",
+        "close": "Kapat"
+      }
+    },
+    "dataEn": {
+      "tag": "// work history",
+      "title": "Experience",
+      "desc": "My professional career journey in enterprise software development.",
+      "modal": {
+        "highlights": "Highlights",
+        "techStack": "Tech Stack",
+        "close": "Close"
+      }
+    }
+  },
+  {
+    "section": "blog",
+    "dataTr": {
+      "tag": "// yazılar",
+      "title": "Blog",
+      "desc": ".NET, dağıtık sistemler ve modern yazılım geliştirme üzerine yazdığım teknik yazılar.",
+      "readMore": "Devamını Oku",
+      "minRead": "dk okuma",
+      "allPosts": "Tüm Yazıları Gör",
+      "categories": {
+        "all": "Tümü"
+      }
+    },
+    "dataEn": {
+      "tag": "// articles",
+      "title": "Blog",
+      "desc": "Technical articles I wrote on .NET, distributed systems, and modern software development.",
+      "readMore": "Read More",
+      "minRead": "min read",
+      "allPosts": "View All Posts",
+      "categories": {
+        "all": "All"
+      }
+    }
+  },
+  {
+    "section": "contact",
+    "dataTr": {
+      "tag": "// iletişim",
+      "title": "İletişim",
+      "desc": "Yeni projeler, iş birliği fırsatları veya sadece bir selamlama için benimle iletişime geçebilirsin.",
+      "email": "Email",
+      "location": "Lokasyon",
+      "locationValue": "İstanbul, Türkiye",
+      "available": "Freelance / Part-time projeler için müsait",
+      "name": "İsim",
+      "emailLabel": "Email",
+      "message": "Mesaj",
+      "namePlaceholder": "Adınız Soyadınız",
+      "emailPlaceholder": "email@ornek.com",
+      "messagePlaceholder": "Projeniz veya iş birliği teklifiniz hakkında bilgi verin...",
+      "send": "Mesaj Gönder",
+      "sent": "✓ Mesaj Gönderildi!"
+    },
+    "dataEn": {
+      "tag": "// get in touch",
+      "title": "Contact",
+      "desc": "Feel free to reach out for new projects, collaboration opportunities, or just to say hello.",
+      "email": "Email",
+      "location": "Location",
+      "locationValue": "Istanbul, Turkey",
+      "available": "Available for Freelance / Part-time projects",
+      "name": "Name",
+      "emailLabel": "Email",
+      "message": "Message",
+      "namePlaceholder": "Your Full Name",
+      "emailPlaceholder": "email@example.com",
+      "messagePlaceholder": "Tell me about your project or collaboration idea...",
+      "send": "Send Message",
+      "sent": "✓ Message Sent!"
+    }
+  },
+  {
+    "section": "footer",
+    "dataTr": {
+      "made": "tarafından yapıldı",
+      "tagline": "Kurumsal backend sistemleri ve API’ler.",
+      "nav": "Navigasyon",
+      "connect": "Bağlantı",
+      "builtWith": "Şununla yapıldı",
+      "resumePdf": "CV (PDF)",
+      "availableShort": "Yeni projelere açık"
+    },
+    "dataEn": {
+      "made": "made by",
+      "tagline": "Enterprise backend systems & APIs.",
+      "nav": "Navigation",
+      "connect": "Connect",
+      "builtWith": "Built with",
+      "resumePdf": "Resume (PDF)",
+      "availableShort": "Open to new projects"
+    }
+  },
+  {
+    "section": "loading",
+    "dataTr": {
+      "lines": [
+        "Sistem Başlatılıyor...",
+        "Modüller Yükleniyor...",
+        "Hazırlanıyor..."
+      ]
+    },
+    "dataEn": {
+      "lines": [
+        "Initializing System...",
+        "Loading Modules...",
+        "Getting Ready..."
+      ]
+    }
+  },
+  {
+    "section": "common",
+    "dataTr": {
+      "details": "Detaylar",
+      "back": "Geri",
+      "close": "Kapat",
+      "searchPlaceholder": "Yazılarda ara...",
+      "noResults": "Sonuç bulunamadı."
+    },
+    "dataEn": {
+      "details": "Details",
+      "back": "Back",
+      "close": "Close",
+      "searchPlaceholder": "Search articles...",
+      "noResults": "No results found."
+    }
+  }
+]
