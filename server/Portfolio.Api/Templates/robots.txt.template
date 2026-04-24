@@ -1,0 +1,4 @@
+User-agent: *
+{{ROBOTS.DIRECTIVE}}
+
+Sitemap: {{SITE.CANONICAL_BASE}}/sitemap.xml

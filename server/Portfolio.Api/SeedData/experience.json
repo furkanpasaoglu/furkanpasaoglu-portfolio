@@ -1,0 +1,128 @@
+[
+  {
+    "sortOrder": 0,
+    "isEducation": false,
+    "period": "06/2021 — Günümüz",
+    "isPublished": true,
+    "tech": [
+      ".NET Core",
+      "C#",
+      "Asp.Net Boilerplate",
+      "Dynamics 365",
+      "Kendo UI",
+      "MSSQL",
+      "SAP",
+      "Redis",
+      "Jenkins",
+      "Azure DevOps"
+    ],
+    "dataTr": {
+      "title": "Senior Software Developer",
+      "company": "Bilgi Birikim Sistemleri",
+      "type": "Full-time",
+      "desc": "ASP.NET MVC, Bootstrap, jQuery ve Kendo UI ile kurumsal web uygulamaları geliştirme. .NET Core/Framework ile RESTful API tasarımı. Microsoft Dynamics 365 CRM entegrasyonları. Clean Architecture ve ASP.NET Boilerplate ile sürdürülebilir sistemler. Azure DevOps ve Jenkins ile CI/CD yönetimi.",
+      "highlights": [
+        "Bupa Acıbadem Sigorta Portali — ASP.NET Boilerplate (.NET 9 MVC), jQuery DataTables için özel server-side filtreleme çözümü geliştirdim",
+        "Teknosa müşteri portali — ASP.NET Boilerplate ve CRM on-premise entegrasyonu",
+        "Derimod — kampanya yönetim sistemi, Windows servisleri, Web API ve Console uygulamaları geliştirdim",
+        "Karaca Türkiye, SharkNinja, Karaca UK, Karaca Germany, Jumbo, Flying Tiger — Hangfire background job'ları dahil Web API ve Windows servisleri",
+        "Allianz CRM'e Twitter, YouTube ve Google Play entegrasyonu",
+        "Türk Hava Yolları, Paşabahçe, Pirelli, Panasonic, MNG Kargo dahil 30+ projede görev aldım",
+        "Microsoft Certified: Power Platform Developer Associate sertifikası"
+      ]
+    },
+    "dataEn": {
+      "title": "Senior Software Developer",
+      "company": "Bilgi Birikim Sistemleri",
+      "type": "Full-time",
+      "desc": "Developed enterprise web applications with ASP.NET MVC, Bootstrap, jQuery, and Kendo UI. Designed RESTful APIs with .NET Core/Framework. Integrated Microsoft Dynamics 365 CRM with third-party services. Built maintainable systems with Clean Architecture and ASP.NET Boilerplate. Managed CI/CD pipelines with Azure DevOps and Jenkins.",
+      "highlights": [
+        "Bupa Acıbadem Insurance Portal — ASP.NET Boilerplate (.NET 9 MVC), designed custom server-side filtering for jQuery DataTables",
+        "Teknosa customer portal — ASP.NET Boilerplate with CRM on-premise integration",
+        "Derimod — campaign management system, Windows services, Web APIs, and Console applications",
+        "Karaca Turkey, SharkNinja, Karaca UK/Germany, Jumbo, Flying Tiger — Web APIs and Windows services with Hangfire background jobs",
+        "Integrated Twitter, YouTube, and Google Play into Allianz CRM",
+        "Contributed to 30+ projects including Turkish Airlines, Paşabahçe, Pirelli, Panasonic, MNG Kargo",
+        "Microsoft Certified: Power Platform Developer Associate"
+      ]
+    }
+  },
+  {
+    "sortOrder": 1,
+    "isEducation": true,
+    "period": "2021",
+    "isPublished": true,
+    "tech": [
+      "C#",
+      ".NET",
+      "Clean Architecture",
+      "CQRS",
+      "Microservices",
+      "RabbitMQ",
+      "Angular"
+    ],
+    "dataTr": {
+      "title": "Senior Software Developer Bootcamp",
+      "company": "Kodlama.io & Techcareer.net",
+      "type": "Eğitim",
+      "desc": "Kodlama.io Senior Software Developer Bootcamp (C# & .NET) ve Techcareer.net Senior Queue Systems Proficiency Bootcamp tamamlandı. Clean Architecture, CQRS, Microservices ve RabbitMQ konularında ileri seviye eğitim.",
+      "highlights": [
+        "Kodlama.io C# & Angular Developer Bootcamp tamamlandı",
+        "Kodlama.io Senior Software Developer Bootcamp tamamlandı",
+        "Techcareer.net Senior Queue Systems Proficiency Bootcamp tamamlandı",
+        "Clean Architecture, CQRS ve DDD konularında ileri seviye eğitim",
+        "Microservices, RabbitMQ ve event-driven architecture çalışmaları"
+      ]
+    },
+    "dataEn": {
+      "title": "Senior Software Developer Bootcamp",
+      "company": "Kodlama.io & Techcareer.net",
+      "type": "Training",
+      "desc": "Completed Kodlama.io Senior Software Developer Bootcamp (C# & .NET) and Techcareer.net Senior Queue Systems Proficiency Bootcamp. Advanced training on Clean Architecture, CQRS, Microservices, and RabbitMQ.",
+      "highlights": [
+        "Completed Kodlama.io C# & Angular Developer Bootcamp",
+        "Completed Kodlama.io Senior Software Developer Bootcamp",
+        "Completed Techcareer.net Senior Queue Systems Proficiency Bootcamp",
+        "Advanced training in Clean Architecture, CQRS, and DDD",
+        "Hands-on practice with Microservices, RabbitMQ, and event-driven architecture"
+      ]
+    }
+  },
+  {
+    "sortOrder": 2,
+    "isEducation": true,
+    "period": "09/2018 — 07/2020",
+    "isPublished": true,
+    "tech": [
+      "C#",
+      "SQL",
+      "Web Programlama",
+      "OOP",
+      "Veritabanı Yönetimi"
+    ],
+    "dataTr": {
+      "title": "Bilgisayar Programcılığı",
+      "company": "Kocaeli Üniversitesi",
+      "type": "Eğitim",
+      "desc": "Bilgisayar Programcılığı ön lisans programını 3.48 GPA ile tamamladım. Yazılım geliştirme temellerini, veritabanı yönetimini ve web programlamayı öğrendim.",
+      "highlights": [
+        "3.48 GPA ile mezuniyet",
+        "C#, OOP ve veritabanı yönetimi temelleri",
+        "Web programlama ve SQL pratiği",
+        "Anadolu Üniversitesi Yönetim Bilişim Sistemleri lisansına devam ediyorum"
+      ]
+    },
+    "dataEn": {
+      "title": "Computer Programming",
+      "company": "Kocaeli University",
+      "type": "Education",
+      "desc": "Completed an associate degree in Computer Programming with a 3.48 GPA. Gained a solid foundation in software development, database management, and web programming.",
+      "highlights": [
+        "Graduated with 3.48 GPA",
+        "Foundations of C#, OOP, and database management",
+        "Web programming and SQL practice",
+        "Currently pursuing a Bachelor's at Anadolu University (Management Information Systems)"
+      ]
+    }
+  }
+]

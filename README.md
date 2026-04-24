@@ -1,143 +1,186 @@
 # furkanpasaoglu-portfolio
 
-[![Live Site](https://img.shields.io/badge/Live%20Site-furkanpasaoglu.com-blue?style=flat-square&logo=vercel)](http://furkanpasaoglu.com/)
-[![React](https://img.shields.io/badge/React-19.1-61DAFB?style=flat-square&logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6.3-646CFF?style=flat-square&logo=vite)](https://vitejs.dev/)
-[![GSAP](https://img.shields.io/badge/GSAP-3.14-88CE02?style=flat-square&logo=greensock)](https://gsap.com/)
+[![Live Site](https://img.shields.io/badge/Live%20Site-furkanpasaoglu.com-blue?style=flat-square)](http://furkanpasaoglu.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![.NET](https://img.shields.io/badge/.NET-9-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-compose-2496ED?style=flat-square&logo=docker)](https://docs.docker.com/compose/)
 
 ---
 
 ## About
 
-A personal portfolio SPA for **Furkan Paşaoğlu**, Senior Software Developer based in Istanbul.
-The site showcases his professional identity, technical skills, work experience, projects, and a bilingual technical blog — all wrapped in a smooth, animation-driven single-page experience.
-
----
+Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Software Developer based in Istanbul. Every piece of content on the public site (projects, experience, skills, blog posts, SEO metadata, contact form settings) is driven by a custom admin panel — no redeploy needed to change content.
 
 ## Hakkında
 
-**Furkan Paşaoğlu**'nun kişisel portföy sitesi. İstanbul merkezli bir Senior Software Developer olarak profesyonel kimliğini, teknik becerilerini, iş deneyimlerini, projelerini ve iki dilli teknik blogunu tek sayfalık animasyonlu bir deneyimde sunar.
+**Furkan Paşaoğlu**'nun kişisel portföy + admin CMS uygulaması. Public site'taki tüm içerik (projeler, deneyim, yetenekler, blog yazıları, SEO metadata, iletişim form ayarları) özel bir admin panel üzerinden yönetilir — içerik değişikliği için redeploy gerekmez.
 
 ---
 
-## Features
+## Architecture / Mimari
 
-- **Bilingual UI** — full Turkish / English support with instant toggle (auto-detects browser language)
+```
+┌─────────────────────────────────────────────────────────┐
+│  nginx (client container)                               │
+│  ├── React SPA           ───  /                          │
+│  ├── React admin SPA     ───  /admin/*                   │
+│  └── Reverse proxy to server:                            │
+│      /api/*, /media/*, /scalar/*, /openapi/*             │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│  ASP.NET Core 9 Minimal API (server container)          │
+│  ├── JWT auth via httpOnly cookies (SameSite=Strict)    │
+│  ├── BCrypt password hashing + rate limiter             │
+│  ├── FluentValidation on every admin mutation           │
+│  ├── EF Core + Npgsql (JSONB for bilingual data)        │
+│  └── Dynamic site renderer → writes index.html+sitemap  │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│  PostgreSQL 17 (internal network only — not exposed)    │
+│  └── Bilingual entities via data_tr / data_en JSONB     │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Features / Özellikler
+
+### Public site
+
+- **Bilingual TR/EN** — instant language toggle, content served from DB per request
 - **Dark / Light theme** — persists to `localStorage`, respects `prefers-color-scheme`
-- **Animated Loading Screen** — GSAP-driven particles, rings, counter and progress bar
-- **Scroll animations** — GSAP `ScrollTrigger` used across all sections
-- **Hero parallax** — mouse-movement parallax on background orbs
-- **Slide-in detail panels** — Projects, Experience and Blog posts open in a right-side GSAP panel (body scroll locked, Escape to close)
-- **Blog** — 6 bilingual articles with real C# code examples; full-screen searchable + filterable post list
-- **Contact form** — client-side form with send confirmation
-- **No router** — pure single-page scroll with anchor links
-- **CV download** — links to `/Furkan-Pasaoglu-Senior-Software-Developer-CV.pdf`
+- **Dynamic content** — every section is DB-driven; admin panel edits appear live after re-render
+- **Sections:** Hero · About · Skills · Projects · Experience · Blog · Contact
+- **Blog** with block editor (paragraph, heading, code, note) — bilingual per post
+- **Contact form** with SMTP delivery + optional auto-reply
+- **SEO managed from admin** — meta tags, Open Graph, JSON-LD schema, sitemap, robots.txt all generated from DB
 
-## Özellikler
+### Admin CMS (`/admin`)
 
-- **İki dil desteği** — Türkçe / İngilizce anlık geçiş (tarayıcı dili otomatik algılanır)
-- **Koyu / Açık tema** — `localStorage`'a kaydedilir, `prefers-color-scheme` desteklenir
-- **Animasyonlu Yükleme Ekranı** — GSAP ile partiküller, dönen halkalar, sayaç ve progress bar
-- **Kaydırma animasyonları** — Tüm bölümlerde GSAP `ScrollTrigger` kullanılır
-- **Hero paralaks** — Arka plan orb'ları fare hareketiyle paralaks
-- **Sağdan açılan paneller** — Projeler, Deneyim ve Blog yazıları sağ taraftan açılan GSAP panelinde görüntülenir (body scroll kilitlenir, Escape ile kapatılır)
-- **Blog** — Gerçek C# kod örnekleri içeren 6 iki dilli makale; tam ekran arama + filtreli yazı listesi
-- **İletişim formu** — Client-side gönderim onaylı form
-- **Router yok** — Saf tek sayfalık scroll, anchor linklerle
-- **CV indirme** — `/Furkan-Pasaoglu-Senior-Software-Developer-CV.pdf` bağlantısı
+- **JWT auth** (httpOnly cookies, rotating refresh tokens, 5/min login rate limit)
+- **Full CRUD** for: projects, experience, skills, blog posts, translations, personal info
+- **Blog block editor** — reorderable blocks, per-language content
+- **Site Settings:** SEO · Social · Schema.org · Branding · Operations · Security (CSP) · Communications (SMTP)
+- **Dashboard** — system info, uptime, content counts, cache clear + manual site re-render
+- **Messages inbox** — contact form submissions with read/unread toggle and auto-reply config
+- **CV upload** (PDF, stored in `uploads` volume)
+- **Maintenance mode** toggle + per-section visibility switches
 
 ---
 
 ## Tech Stack
 
-| Package | Version | Purpose |
-|---|---|---|
-| `react` | ^19.1.0 | UI framework |
-| `react-dom` | ^19.1.0 | DOM rendering |
-| `gsap` | ^3.14.2 | Animations & ScrollTrigger |
-| `@gsap/react` | ^2.1.2 | GSAP React integration |
-| `react-icons` | ^5.5.0 | Icon library |
-| `vite` | ^6.3.5 | Build tool & dev server |
-| `@vitejs/plugin-react` | ^4.4.1 | Babel Fast Refresh for Vite |
-| `eslint` | ^9.25.0 | Linting |
+### Backend (`server/Portfolio.Api/`)
+
+| Package | Purpose |
+|---|---|
+| .NET 9 Minimal API | HTTP host |
+| Entity Framework Core + Npgsql | ORM with JSONB support |
+| FluentValidation | Request validation on every admin endpoint |
+| BCrypt.Net | Password hashing |
+| System.IdentityModel.Tokens.Jwt | JWT issue/validate |
+| Scalar | API docs at `/scalar/v1` (dev only) |
+
+### Frontend (`client/`)
+
+| Package | Purpose |
+|---|---|
+| React 19 + Vite 6 | Public SPA + admin SPA |
+| React Router | Admin routing |
+| TanStack Query | Data fetching + cache |
+| Mantine 7 | Admin UI kit (scoped to `/admin` only) |
+| Zod + @mantine/form | Form validation |
+| React Icons / Tabler Icons | Icons |
+
+### Infra
+
+| | |
+|---|---|
+| PostgreSQL 17 | Data store (internal docker network only) |
+| Docker Compose | 3-service orchestration |
+| nginx | SPA serve + reverse proxy |
+| Dokploy | Deployment target (Traefik for TLS/routing) |
 
 ---
 
-## Project Structure / Proje Yapısı
+## Repository structure
 
 ```
-src/
-├── main.jsx               # Entry point
-├── App.jsx                # Root — ThemeProvider → LanguageProvider → LoadingScreen → App
-├── components/
-│   ├── LoadingScreen       # Animated intro screen
-│   ├── Navbar              # Fixed top nav, theme & language toggles, mobile hamburger
-│   ├── Hero                # Full-viewport landing, parallax background, social links
-│   ├── About               # Bio, avatar placeholder, stat cards
-│   ├── Skills              # Skill chips by category (Backend / DB / DevOps+Frontend)
-│   ├── Projects            # Project cards grid + ProjectPanel slide-in
-│   ├── ProjectPanel        # Right-side project detail panel
-│   ├── Experience          # Alternating vertical timeline + ExperiencePanel slide-in
-│   ├── ExperiencePanel     # Right-side experience detail panel
-│   ├── Blog                # Featured posts + BlogAllPosts modal + BlogPostPanel
-│   ├── BlogAllPosts        # Full-screen post list with search & category filter
-│   ├── BlogPostPanel       # Right-side article reader (renders blogContent.js)
-│   ├── Contact             # Info panel + contact form
-│   └── Footer              # Logo, credits, socials, scroll-to-top
-├── context/
-│   ├── ThemeContext.jsx    # Dark/light theme context & hook
-│   ├── LanguageContext.jsx # TR/EN language context & hook
-│   ├── en.js               # English translation strings
-│   └── tr.js               # Turkish translation strings
-└── data/
-    └── blogContent.js      # Full bilingual article content (6 posts, TR + EN)
+.
+├── client/                        # React (public + admin) + Vite + nginx
+│   ├── src/
+│   │   ├── components/sections/   # Public sections (Hero, About, Projects, …)
+│   │   ├── admin/                 # Admin SPA (Mantine scoped here)
+│   │   ├── api/                   # publicApi / adminApi / endpoints
+│   │   ├── context/               # Theme, Language, SiteMeta providers
+│   │   └── hooks/                 # usePublicData, useSelectableDetail, …
+│   ├── Dockerfile                 # Multi-stage: build → nginx
+│   └── nginx.conf                 # Proxies /api, /media, /scalar, /openapi
+│
+├── server/Portfolio.Api/          # .NET 9 Minimal API
+│   ├── Endpoints/                 # One static class per resource
+│   ├── Domain/                    # POCOs with data_tr / data_en JSONB
+│   ├── Contracts/                 # DTOs grouped by feature
+│   ├── Validators/                # FluentValidation classes
+│   ├── Services/                  # JwtService, SiteRenderer, EmailSender, …
+│   ├── Data/                      # AppDbContext, Seeder
+│   ├── Common/                    # Lang + slug helpers
+│   ├── Migrations/                # EF Core migrations
+│   └── SeedData/                  # First-boot JSON seed
+│
+├── docker-compose.yml                   # Base (postgres + server + client)
+├── docker-compose.override.yml.example  # Dev template (loopback ports)
+└── .env.example                         # Env var template
 ```
 
 ---
 
-## Getting Started / Kurulum
+## Getting started / Kurulum
 
-### Prerequisites / Gereksinimler
+### Prerequisites
 
-- Node.js ≥ 18
-- npm ≥ 9
+- Docker + Docker Compose
+- Node.js ≥ 22 (optional — for running client outside Docker)
+- .NET SDK 9 (optional — for running server outside Docker)
 
-### Installation & Running / Kurulum ve Çalıştırma
+### Local development
 
 ```bash
-# Install dependencies / Bağımlılıkları yükle
-npm install
+# 1. Copy env templates
+cp .env.example .env
+cp docker-compose.override.yml.example docker-compose.override.yml
 
-# Start development server / Geliştirme sunucusunu başlat
-npm run dev
+# 2. Edit .env with local-friendly values (defaults are fine for localhost)
 
-# Build for production / Prodüksiyon için derle
-npm run build
+# 3. Start everything
+docker compose up -d
 
-# Preview production build / Prodüksiyon derlemesini önizle
-npm run preview
+# 4. Open
+#    http://localhost/           (public site)
+#    http://localhost/admin      (admin login — credentials from .env)
+#    http://localhost:8080/scalar/v1  (API docs)
 ```
 
----
-
-## Sections / Bölümler
-
-| Section | Description | Açıklama |
-|---|---|---|
-| **Hero** | Full-viewport landing with animated title, social links, parallax orbs | Animasyonlu başlık, sosyal linkler ve paralaks arka planla tam sayfa giriş |
-| **About** | Bio, "FP" avatar with animated rings, 4 stat cards, CV link | Biyografi, animasyonlu "FP" avatar, 4 istatistik kartı, CV linki |
-| **Skills** | ~19 technologies in 3 categories: Backend & .NET, Database & Integration, DevOps & Frontend | 3 kategoride ~19 teknoloji |
-| **Projects** | 9 real-world projects; slide-in panel with stack, highlights and links | 9 gerçek proje; stack, öne çıkanlar ve linklerle sağdan açılan panel |
-| **Experience** | 3-entry alternating timeline: BBS (2021–Present), Bootcamp, University | 3 girişli alternatif zaman çizelgesi: BBS, Bootcamp, Üniversite |
-| **Blog** | 6 bilingual articles (Clean Architecture, CQRS, Hangfire, Semantic Kernel, Health Checks, EF Core) | 6 iki dilli makale |
-| **Contact** | Info panel + client-side contact form | Bilgi paneli + client-side iletişim formu |
-| **Footer** | Credits, GitHub/LinkedIn links, scroll-to-top | Kredi, sosyal linkler, yukarı çık butonu |
+The override file binds Postgres to `127.0.0.1:5432` and the server to `127.0.0.1:8080` for easy local inspection. It is **gitignored** so it never reaches production.
 
 ---
 
-## Live Site / Canlı Site
+## Deployment
 
-**[furkanpasaoglu.com](http://furkanpasaoglu.com/)**
+Deployed via **Dokploy** (which bundles Traefik for TLS + routing). Short path:
+
+1. Point Dokploy at this repo (Compose service type).
+2. Compose file: `docker-compose.yml` only — do **not** include the override.
+3. Set env vars in the Dokploy panel (see `.env.example`) — generate strong values with `openssl rand -base64 32` etc.
+4. Add domain + enable HTTPS in Dokploy Domains; route to service `client`, port `80`.
+5. Deploy.
+
+Base `docker-compose.yml` never publishes Postgres or the API port — they live only on the internal docker network. TLS termination, domain routing, and log viewing are handled by Dokploy/Traefik.
 
 ---
 

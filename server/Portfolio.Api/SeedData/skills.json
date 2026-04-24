@@ -1,0 +1,125 @@
+[
+  {
+    "sortOrder": 0,
+    "icon": "dotnet",
+    "titleTr": "Backend & .NET",
+    "titleEn": "Backend & .NET",
+    "isPublished": true,
+    "skills": [
+      {
+        "name": "C#",
+        "tier": "expert"
+      },
+      {
+        "name": ".NET Core / ASP.NET Core",
+        "tier": "expert"
+      },
+      {
+        "name": ".NET Framework / MVC",
+        "tier": "expert"
+      },
+      {
+        "name": "Clean Architecture",
+        "tier": "expert"
+      },
+      {
+        "name": "Microservices",
+        "tier": "proficient"
+      },
+      {
+        "name": "Asp.Net Boilerplate / ABP.io",
+        "tier": "proficient"
+      },
+      {
+        "name": "CQRS / MediatR",
+        "tier": "proficient"
+      },
+      {
+        "name": "Hangfire",
+        "tier": "proficient"
+      }
+    ]
+  },
+  {
+    "sortOrder": 1,
+    "icon": "database",
+    "titleTr": "Veritabanı & Entegrasyon",
+    "titleEn": "Database & Integration",
+    "isPublished": true,
+    "skills": [
+      {
+        "name": "MSSQL / MySQL",
+        "tier": "expert"
+      },
+      {
+        "name": "PostgreSQL / Oracle",
+        "tier": "proficient"
+      },
+      {
+        "name": "MongoDB",
+        "tier": "proficient"
+      },
+      {
+        "name": "Microsoft Dynamics 365",
+        "tier": "expert"
+      },
+      {
+        "name": "SAP Integration",
+        "tier": "proficient"
+      },
+      {
+        "name": "RabbitMQ / gRPC",
+        "tier": "proficient"
+      },
+      {
+        "name": "Redis",
+        "tier": "proficient"
+      },
+      {
+        "name": "REST / SOAP API",
+        "tier": "expert"
+      }
+    ]
+  },
+  {
+    "sortOrder": 2,
+    "icon": "devops",
+    "titleTr": "DevOps & Frontend",
+    "titleEn": "DevOps & Frontend",
+    "isPublished": true,
+    "skills": [
+      {
+        "name": "Git / GitHub / TFS",
+        "tier": "expert"
+      },
+      {
+        "name": "Azure DevOps",
+        "tier": "proficient"
+      },
+      {
+        "name": "Docker",
+        "tier": "proficient"
+      },
+      {
+        "name": "Jenkins / CI-CD",
+        "tier": "proficient"
+      },
+      {
+        "name": "Angular",
+        "tier": "proficient"
+      },
+      {
+        "name": "Bootstrap / Kendo UI",
+        "tier": "expert"
+      },
+      {
+        "name": "React",
+        "tier": "familiar"
+      },
+      {
+        "name": "JavaScript / TypeScript",
+        "tier": "proficient"
+      }
+    ]
+  }
+]

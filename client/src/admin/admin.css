@@ -1,0 +1,9 @@
+/* Admin scope resets that might conflict with public site custom CSS. */
+.admin-root {
+  color-scheme: dark;
+}
+
+/* Make sure Mantine's own body styles apply inside /admin */
+:where([data-mantine-color-scheme]) {
+  --mantine-font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+}

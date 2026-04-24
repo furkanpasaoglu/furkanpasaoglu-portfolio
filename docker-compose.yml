@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: portfolio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: portfolio
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  server:
+    build:
+      context: ./server/Portfolio.Api
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+    container_name: portfolio-server
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=portfolio;Username=portfolio;Password=${POSTGRES_PASSWORD}"
+      Jwt__Secret: ${JWT_SECRET}
+      Jwt__Issuer: portfolio
+      Jwt__Audience: portfolio
+      Admin__Username: ${ADMIN_USERNAME}
+      Admin__Password: ${ADMIN_PASSWORD}
+      Admin__Reset: ${ADMIN_RESET:-false}
+      ASPNETCORE_ENVIRONMENT: Production
+      WebStatic__OutputPath: /app/web-static
+      WebStatic__TemplatesPath: /app/Templates
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+      - web_static:/app/web-static
+
+  client:
+    build:
+      context: ./client
+    container_name: portfolio-client
+    restart: unless-stopped
+    ports:
+      - "${CLIENT_PORT:-80}:80"
+    depends_on:
+      - server
+    volumes:
+      - web_static:/usr/share/nginx/html
+
+volumes:
+  pgdata:
+  uploads:
+  web_static:
