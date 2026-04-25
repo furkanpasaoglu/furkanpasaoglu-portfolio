@@ -38,18 +38,13 @@ public class SiteRenderer(
             ?? throw new InvalidOperationException("SiteSettings row missing.");
 
         Directory.CreateDirectory(OutDir);
-        var indexHtml = IsMaintenanceMode(settings) ? RenderMaintenance(settings) : RenderIndex(settings);
-        await WriteAtomicAsync("index.html", indexHtml, ct);
+        // index.html is ALWAYS the SPA. Maintenance UI is rendered client-side
+        // (App.jsx → PublicSite checks operations.maintenanceMode) so the /admin
+        // route can keep its bundle script tag and stay reachable during downtime.
+        await WriteAtomicAsync("index.html", RenderIndex(settings), ct);
         await WriteAtomicAsync("robots.txt", RenderRobots(settings), ct);
         await WriteAtomicAsync("sitemap.xml", await RenderSitemapInternalAsync(settings, ct), ct);
-        log.LogInformation("Rendered site static files to {Dir} (maintenance={Maintenance})",
-            OutDir, IsMaintenanceMode(settings));
-    }
-
-    private static bool IsMaintenanceMode(SiteSettings s)
-    {
-        if (s.OperationsJson.ValueKind != JsonValueKind.Object) return false;
-        return s.OperationsJson.TryGetProperty("maintenanceMode", out var m) && m.ValueKind == JsonValueKind.True;
+        log.LogInformation("Rendered site static files to {Dir}", OutDir);
     }
 
     public async Task RenderSitemapAsync(CancellationToken ct = default)
@@ -316,29 +311,6 @@ public class SiteRenderer(
 
         var template = await File.ReadAllTextAsync(Path.Combine(TemplatesDir, "sitemap.xml.template"), ct);
         return template.Replace("{{SITEMAP.URLS}}", urls.ToString().TrimEnd());
-    }
-
-    // ── Phase 2: maintenance / analytics / CSP / robots extras ──────
-    private string RenderMaintenance(SiteSettings s)
-    {
-        var template = File.ReadAllText(Path.Combine(TemplatesDir, "maintenance.html.template"));
-        string Get(JsonElement root, string key, string fallback) =>
-            root.ValueKind == JsonValueKind.Object && root.TryGetProperty(key, out var el) && el.ValueKind == JsonValueKind.String
-                ? (el.GetString() ?? fallback) : fallback;
-
-        var b = s.BrandingJson;
-        var en = s.DataEn;
-        var ops = s.OperationsJson;
-        string titleEn = Get(en, "title", "Maintenance");
-        string msgEn = Get(ops, "maintenanceMessage_en", "The site is currently under maintenance.");
-        string msgTr = Get(ops, "maintenanceMessage_tr", "Site bakımda.");
-
-        return template
-            .Replace("{{SITE.TITLE_EN}}", System.Net.WebUtility.HtmlEncode(titleEn))
-            .Replace("{{SITE.THEME_COLOR}}", Get(b, "themeColor", "#0ea5e9"))
-            .Replace("{{SITE.FAVICON_URL}}", Get(b, "faviconUrl", "/favicon.svg"))
-            .Replace("{{SITE.MAINTENANCE_MESSAGE_EN}}", System.Net.WebUtility.HtmlEncode(msgEn))
-            .Replace("{{SITE.MAINTENANCE_MESSAGE_TR}}", System.Net.WebUtility.HtmlEncode(msgTr));
     }
 
     private static string BuildCspContent(SiteSettings s)

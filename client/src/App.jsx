@@ -13,13 +13,23 @@ import Projects from './components/sections/Projects';
 import Experience from './components/sections/Experience';
 import Blog from './components/sections/Blog';
 import Contact from './components/sections/Contact';
+import MaintenancePage from './components/MaintenancePage';
 import { useSiteOperations } from './hooks/useSiteOperations';
 
 // Admin SPA ships as a separate chunk — public visitors never download it.
 const AdminRouter = lazy(() => import('./admin/AdminRouter'));
 
 function PublicSite() {
-  const { sectionsEnabled } = useSiteOperations();
+  const ops = useSiteOperations();
+  if (ops.maintenanceMode) {
+    return (
+      <MaintenancePage
+        messageTr={ops.maintenanceMessage_tr}
+        messageEn={ops.maintenanceMessage_en}
+      />
+    );
+  }
+  const { sectionsEnabled } = ops;
   return (
     <>
       <Navbar />

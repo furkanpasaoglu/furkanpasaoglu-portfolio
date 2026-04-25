@@ -4,12 +4,13 @@
 # The real override file is gitignored so it can't leak to prod.
 #
 # WARNING: Ports declared here are bound on the host. On a VPS (Dokploy etc.)
-# this would make Postgres and the API world-reachable — never commit this file.
+# this would make services world-reachable — never commit this file.
+#
+# NOTE: Postgres is no longer part of this compose; the API connects to a
+# shared Postgres (running in a separate Dokploy project). For local dev,
+# either point ConnectionStrings__Default at a locally running Postgres or
+# expose the shared one over an SSH tunnel.
 services:
-  postgres:
-    ports:
-      - "127.0.0.1:5432:5432"   # loopback-only so only your machine can hit it
-
   server:
     ports:
       - "127.0.0.1:8080:8080"   # loopback-only; nginx container still reaches it via the internal network
