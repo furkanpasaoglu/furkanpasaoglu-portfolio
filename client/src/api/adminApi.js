@@ -7,9 +7,7 @@ const put = (url, body) => request(url, { method: 'PUT', body, auth: true });
 const del = (url) => request(url, { method: 'DELETE', auth: true });
 
 export const adminApi = {
-  // ── Auth ──
-  login: (username, password) =>
-    request(endpoints.authLogin, { method: 'POST', body: { username, password } }),
+  // ── Auth (login is a server-side OIDC redirect; no API method here) ──
   logout: () => post(endpoints.authLogout),
   me: () => get(endpoints.me),
 

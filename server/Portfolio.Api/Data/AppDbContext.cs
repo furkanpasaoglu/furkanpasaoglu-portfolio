@@ -5,7 +5,6 @@ namespace Portfolio.Api.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Experience> Experiences => Set<Experience>();
     public DbSet<SkillCategory> SkillCategories => Set<SkillCategory>();
@@ -17,20 +16,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
-        mb.Entity<AdminUser>(e =>
-        {
-            e.ToTable("admin_user");
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Id).HasColumnName("id");
-            e.Property(x => x.Username).HasColumnName("username").IsRequired().HasMaxLength(64);
-            e.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
-            e.Property(x => x.RefreshTokenHash).HasColumnName("refresh_token_hash");
-            e.Property(x => x.RefreshExpiresAt).HasColumnName("refresh_expires_at");
-            e.Property(x => x.CreatedAt).HasColumnName("created_at");
-            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
-            e.HasIndex(x => x.Username).IsUnique();
-        });
-
         mb.Entity<Project>(e =>
         {
             e.ToTable("project");

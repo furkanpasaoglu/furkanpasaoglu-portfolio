@@ -1,10 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Portfolio.Api.Domain;
-using Portfolio.Api.Options;
-using Portfolio.Api.Services;
 
 namespace Portfolio.Api.Data;
 
@@ -15,12 +12,9 @@ public interface ISeeder
 
 public class Seeder(
     AppDbContext db,
-    IOptions<AdminOptions> adminOptions,
     IWebHostEnvironment env,
     ILogger<Seeder> log) : ISeeder
 {
-    private readonly AdminOptions _admin = adminOptions.Value;
-
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -29,7 +23,6 @@ public class Seeder(
 
     public async Task SeedAsync(CancellationToken ct = default)
     {
-        await SeedAdminUserAsync(ct);
         await SeedFromJsonAsync<ProjectSeedRow, Project>("projects.json", db.Projects, (r, now) => new Project
         {
             Slug = r.Slug, SortOrder = r.SortOrder, IsPublished = r.IsPublished,
@@ -119,41 +112,6 @@ public class Seeder(
 
     private static bool IsEmptyObject(JsonElement el) =>
         el.ValueKind != JsonValueKind.Object || !el.EnumerateObject().Any();
-
-    private async Task SeedAdminUserAsync(CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(_admin.Username) || string.IsNullOrWhiteSpace(_admin.Password))
-        {
-            log.LogWarning("Admin username/password not configured; skipping admin seeding.");
-            return;
-        }
-
-        var existing = await db.AdminUsers.FirstOrDefaultAsync(u => u.Username == _admin.Username, ct);
-
-        if (existing is null)
-        {
-            db.AdminUsers.Add(new AdminUser
-            {
-                Username = _admin.Username,
-                PasswordHash = PasswordHasher.Hash(_admin.Password),
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-            });
-            await db.SaveChangesAsync(ct);
-            log.LogInformation("Seeded admin user '{Username}'.", _admin.Username);
-            return;
-        }
-
-        if (_admin.Reset)
-        {
-            existing.PasswordHash = PasswordHasher.Hash(_admin.Password);
-            existing.RefreshTokenHash = null;
-            existing.RefreshExpiresAt = null;
-            existing.UpdatedAt = DateTime.UtcNow;
-            await db.SaveChangesAsync(ct);
-            log.LogWarning("Admin password RESET for user '{Username}'.", _admin.Username);
-        }
-    }
 
     /// <summary>Generic seeder. Idempotent: skips when any row exists.</summary>
     private async Task SeedFromJsonAsync<TRow, TEntity>(

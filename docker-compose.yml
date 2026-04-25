@@ -25,12 +25,12 @@ services:
     restart: unless-stopped
     environment:
       ConnectionStrings__Default: "Host=postgres;Port=5432;Database=portfolio;Username=portfolio;Password=${POSTGRES_PASSWORD}"
-      Jwt__Secret: ${JWT_SECRET}
-      Jwt__Issuer: portfolio
-      Jwt__Audience: portfolio
-      Admin__Username: ${ADMIN_USERNAME}
-      Admin__Password: ${ADMIN_PASSWORD}
-      Admin__Reset: ${ADMIN_RESET:-false}
+      Keycloak__Authority: ${KEYCLOAK_AUTHORITY}
+      Keycloak__ClientId: ${KEYCLOAK_CLIENT_ID}
+      Keycloak__ClientSecret: ${KEYCLOAK_CLIENT_SECRET}
+      Keycloak__PublicOrigin: ${PUBLIC_ORIGIN}
+      Keycloak__PostLoginPath: /admin
+      Keycloak__PostLogoutPath: /admin/login
       ASPNETCORE_ENVIRONMENT: Production
       WebStatic__OutputPath: /app/web-static
       WebStatic__TemplatesPath: /app/Templates

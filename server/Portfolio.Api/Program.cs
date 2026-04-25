@@ -1,10 +1,11 @@
-using System.Text;
+using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.RateLimiting;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Scalar.AspNetCore;
 using Portfolio.Api.Data;
@@ -16,17 +17,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── Options ──────────────────────────────────────────────────────────
 builder.Services
-    .AddOptions<JwtOptions>()
-    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
-    .Validate(o => !string.IsNullOrWhiteSpace(o.Secret), "Jwt:Secret must be configured.")
+    .AddOptions<KeycloakOptions>()
+    .Bind(builder.Configuration.GetSection(KeycloakOptions.SectionName))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Authority), "Keycloak:Authority must be configured.")
+    .Validate(o => !string.IsNullOrWhiteSpace(o.ClientId), "Keycloak:ClientId must be configured.")
+    .Validate(o => !string.IsNullOrWhiteSpace(o.ClientSecret), "Keycloak:ClientSecret must be configured.")
     .ValidateOnStart();
 
-builder.Services
-    .AddOptions<AdminOptions>()
-    .Bind(builder.Configuration.GetSection(AdminOptions.SectionName))
-    .ValidateOnStart();
-
-var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()!;
+var keycloakSection = builder.Configuration.GetSection(KeycloakOptions.SectionName).Get<KeycloakOptions>()!;
 
 // ── Database ─────────────────────────────────────────────────────────
 var connectionString = builder.Configuration.GetConnectionString("Default")
@@ -40,9 +38,9 @@ builder.Services.AddSingleton(npgsqlDataSource);
 builder.Services.AddDbContext<AppDbContext>(opts => opts.UseNpgsql(npgsqlDataSource));
 
 // ── Services ─────────────────────────────────────────────────────────
-builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<ISeeder, Seeder>();
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+builder.Services.AddHttpClient();
 
 builder.Services.AddOptions<WebStaticOptions>()
     .Bind(builder.Configuration.GetSection(WebStaticOptions.SectionName));
@@ -52,24 +50,27 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddHostedService<MessageCleanupService>();
 
-// ── Authentication (JWT via cookie) ──────────────────────────────────
+// ── Authentication (Keycloak JWT via httpOnly cookie) ────────────────
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
-        o.TokenValidationParameters = new TokenValidationParameters
+        o.Authority = keycloakSection.Authority;
+        o.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        o.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidateAudience = true,
+            ValidIssuer = keycloakSection.Authority,
+            // Keycloak access tokens carry the client_id in `azp`, not `aud`, by default.
+            // We pin authorization to the client role check below instead of audience.
+            ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection.Issuer,
-            ValidAudience = jwtSection.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection.Secret)),
+            NameClaimType = "preferred_username",
+            RoleClaimType = ClaimTypes.Role,
             ClockSkew = TimeSpan.FromSeconds(30),
         };
 
-        // Read JWT from pf_access cookie instead of Authorization header
         o.Events = new JwtBearerEvents
         {
             OnMessageReceived = ctx =>
@@ -79,11 +80,48 @@ builder.Services
                     ctx.Token = t;
                 }
                 return Task.CompletedTask;
+            },
+            OnTokenValidated = ctx =>
+            {
+                // Flatten Keycloak's resource_access.<client>.roles into ClaimTypes.Role
+                if (ctx.Principal?.Identity is ClaimsIdentity identity)
+                {
+                    var ra = ctx.Principal.FindFirst("resource_access")?.Value;
+                    if (!string.IsNullOrEmpty(ra))
+                    {
+                        try
+                        {
+                            using var doc = JsonDocument.Parse(ra);
+                            if (doc.RootElement.TryGetProperty(keycloakSection.ClientId, out var clientEl) &&
+                                clientEl.TryGetProperty("roles", out var rolesEl) &&
+                                rolesEl.ValueKind == JsonValueKind.Array)
+                            {
+                                foreach (var role in rolesEl.EnumerateArray())
+                                {
+                                    var name = role.GetString();
+                                    if (!string.IsNullOrEmpty(name))
+                                    {
+                                        identity.AddClaim(new Claim(ClaimTypes.Role, name));
+                                    }
+                                }
+                            }
+                        }
+                        catch (JsonException) { /* malformed claim; treat as no roles */ }
+                    }
+                }
+                return Task.CompletedTask;
             }
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opts =>
+{
+    // Default policy for [Authorize] / .RequireAuthorization() — must have admin role on this client.
+    opts.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .RequireRole("admin")
+        .Build();
+});
 
 // ── Rate limiting (5/min on login) ───────────────────────────────────
 builder.Services.AddRateLimiter(opts =>

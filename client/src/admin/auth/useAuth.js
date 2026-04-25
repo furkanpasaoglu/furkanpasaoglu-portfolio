@@ -13,14 +13,6 @@ export function useMe() {
   });
 }
 
-export function useLogin() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ username, password }) => adminApi.login(username, password),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ME_KEY }),
-  });
-}
-
 export function useLogout() {
   const qc = useQueryClient();
   return useMutation({
