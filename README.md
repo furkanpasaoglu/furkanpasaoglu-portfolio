@@ -21,7 +21,7 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 ## Architecture / Mimari
 
 ```
-┌─────────────────────────────────────────────────────────┐
+┌────────────────────────────────────────────────────────┐
 │  nginx (client container)                               │
 │  ├── React SPA           ───  /                          │
 │  ├── React admin SPA     ───  /admin/*                   │
@@ -32,8 +32,8 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
                          ▼
 ┌─────────────────────────────────────────────────────────┐
 │  ASP.NET Core 9 Minimal API (server container)          │
-│  ├── JWT auth via httpOnly cookies (SameSite=Strict)    │
-│  ├── BCrypt password hashing + rate limiter             │
+│  ├── Keycloak OIDC — auth code + PKCE (BFF pattern)     │
+│  ├── Tokens in httpOnly cookies + rate limiter          │
 │  ├── FluentValidation on every admin mutation           │
 │  ├── EF Core + Npgsql (JSONB for bilingual data)        │
 │  └── Dynamic site renderer → writes index.html+sitemap  │
@@ -62,7 +62,7 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 
 ### Admin CMS (`/admin`)
 
-- **JWT auth** (httpOnly cookies, rotating refresh tokens, 5/min login rate limit)
+- **Keycloak OIDC** — authorization code + PKCE in a **BFF pattern**: the code-to-token exchange happens server-side and access/refresh tokens live in httpOnly cookies, never in the browser. Refresh rotation, Keycloak realm roles mapped to app roles, 5/min login rate limit
 - **Full CRUD** for: projects, experience, skills, blog posts, translations, personal info
 - **Blog block editor** — reorderable blocks, per-language content
 - **Site Settings:** SEO · Social · Schema.org · Branding · Operations · Security (CSP) · Communications (SMTP)
@@ -82,8 +82,7 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 | .NET 9 Minimal API | HTTP host |
 | Entity Framework Core + Npgsql | ORM with JSONB support |
 | FluentValidation | Request validation on every admin endpoint |
-| BCrypt.Net | Password hashing |
-| System.IdentityModel.Tokens.Jwt | JWT issue/validate |
+| Microsoft.AspNetCore.Authentication.JwtBearer | Validates Keycloak-issued access tokens (read from the httpOnly cookie) |
 | Scalar | API docs at `/scalar/v1` (dev only) |
 
 ### Frontend (`client/`)
@@ -101,6 +100,7 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 
 | | |
 |---|---|
+| Keycloak | Identity provider — OIDC (authorization code + PKCE) |
 | PostgreSQL 17 | Data store (internal docker network only) |
 | Docker Compose | 3-service orchestration |
 | nginx | SPA serve + reverse proxy |
@@ -127,7 +127,8 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 │   ├── Domain/                    # POCOs with data_tr / data_en JSONB
 │   ├── Contracts/                 # DTOs grouped by feature
 │   ├── Validators/                # FluentValidation classes
-│   ├── Services/                  # JwtService, SiteRenderer, EmailSender, …
+│   ├── Services/                  # SiteRenderer, EmailSender, MaintenanceMiddleware, …
+│   ├── Options/                   # KeycloakOptions, SmtpOptions, …
 │   ├── Data/                      # AppDbContext, Seeder
 │   ├── Common/                    # Lang + slug helpers
 │   ├── Migrations/                # EF Core migrations
