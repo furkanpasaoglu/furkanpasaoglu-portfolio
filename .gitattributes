@@ -1,0 +1,8 @@
+# GitHub language statistics
+#
+# Primary language of this repository is C# - the ASP.NET Core 9 Minimal API under server/.
+# GitHub labelled the whole repo JavaScript because the React client has more lines.
+# The client is excluded from language statistics only; nothing is hidden and the client
+# source stays fully visible in the repository.
+
+client/** linguist-detectable=false
