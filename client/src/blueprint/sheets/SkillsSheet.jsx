@@ -3,8 +3,9 @@ import { BANDS, BAND_LABEL, useSkillModel } from '../skillModel';
 import CoreView from './skills/CoreView';
 
 /**
- * Capability, read from the centre out: three curated domains as sectors,
- * three grades as rings. Both come straight from the API.
+ * Capability, read from the centre out: one sector per domain, two rings for
+ * the two bands. Both the domains and their order come from the API, so the
+ * sheet does not care how many there are.
  */
 export default function SkillsSheet({ lang }) {
   const tr = lang === 'tr';
@@ -30,7 +31,7 @@ export default function SkillsSheet({ lang }) {
         {/* Structure only — the panel carries the reading of it, and saying
             it in both places would just be the same sentence twice. */}
         <p className="bp-fit-hint">
-          {tr ? 'Üç alan üç dilim, iki halka.' : 'Three domains, two rings.'}
+          {tr ? 'Her dilim bir alan, iki halka.' : 'One sector per domain, two rings.'}
         </p>
       </div>
 

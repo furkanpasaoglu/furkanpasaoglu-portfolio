@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { BAND_LABEL } from '../../skillModel';
 
 /**
- * A polar reading of the same data: three sectors (the curated domains) by
- * three rings (the grades), centre outward. What you own is at the core;
- * what you have only touched sits on the rim.
+ * A polar reading of the same data: one sector per domain, two rings for the
+ * two bands, centre outward. What you own is at the core; what you have only
+ * touched sits on the rim. The sector count follows the data.
  *
  * Skill names are deliberately NOT set around the rings — radial type is
  * unreadable at this size. The diagram carries the shape of the data and the
