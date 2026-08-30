@@ -15,6 +15,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Without this the test project could not see a single type from the
+         API, which is why it only ever held an empty placeholder test. -->
+    <ProjectReference Include="../Portfolio.Api/Portfolio.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

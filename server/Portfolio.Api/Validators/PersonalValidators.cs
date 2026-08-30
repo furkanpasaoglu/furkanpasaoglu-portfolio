@@ -10,15 +10,10 @@ public class PersonalValidator : AbstractValidator<PersonalDto>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(200);
         RuleFor(x => x.Location).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Github)
-            .MaximumLength(500)
-            .Must(BeNullOrValidUrl).WithMessage("GitHub must be a valid URL or empty.");
-        RuleFor(x => x.Linkedin)
-            .MaximumLength(500)
-            .Must(BeNullOrValidUrl).WithMessage("LinkedIn must be a valid URL or empty.");
-        RuleFor(x => x.CvUrl).MaximumLength(500);
+        RuleFor(x => x.Github).MaximumLength(500).HttpUrl();
+        RuleFor(x => x.Linkedin).MaximumLength(500).HttpUrl();
+        // The CV is served from the uploads volume, so a site-relative path is
+        // the normal case here.
+        RuleFor(x => x.CvUrl).MaximumLength(500).HttpUrlOrPath();
     }
-
-    private static bool BeNullOrValidUrl(string? value) =>
-        string.IsNullOrWhiteSpace(value) || Uri.TryCreate(value, UriKind.Absolute, out _);
 }

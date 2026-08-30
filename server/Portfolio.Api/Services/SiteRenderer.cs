@@ -85,13 +85,20 @@ public class SiteRenderer(
 
         var template = File.ReadAllText(Path.Combine(TemplatesDir, "index.html.template"));
 
-        string S(JsonElement e, string key) => e.GetProperty(key).GetString() ?? string.Empty;
+        string Raw(JsonElement e, string key) => e.GetProperty(key).GetString() ?? string.Empty;
+
+        // Every stored string below is written straight into an HTML attribute
+        // or into <title>, so it MUST be encoded. Without this an editor can
+        // close the attribute and inject markup into the file that is then
+        // served to every visitor — persistent XSS that never touches React.
+        string S(JsonElement e, string key) => System.Net.WebUtility.HtmlEncode(Raw(e, key));
+
         int I(JsonElement e, string key) => e.GetProperty(key).GetInt32();
         bool Bl(JsonElement e, string key) => e.GetProperty(key).GetBoolean();
 
         string canonical = S(b, "canonicalBaseUrl").TrimEnd('/');
         string robotsMeta = $"{(Bl(b, "robotsIndex") ? "index" : "noindex")}, {(Bl(b, "robotsFollow") ? "follow" : "nofollow")}";
-        string verification = S(b, "googleSiteVerification");
+        string verification = Raw(b, "googleSiteVerification");
         string verificationMeta = string.IsNullOrWhiteSpace(verification)
             ? ""
             : $"<meta name=\"google-site-verification\" content=\"{System.Net.WebUtility.HtmlEncode(verification)}\" />";
@@ -126,7 +133,9 @@ public class SiteRenderer(
             ["{{SCHEMA.WEBSITE_JSON}}"] = BuildWebSiteJson(s),
             ["{{ASSET.MAIN_JS}}"] = GetAssetMainJs(),
             ["{{ASSET.MAIN_CSS_LINK}}"] = GetAssetMainCssLink(),
-            ["{{SITE.CSP_CONTENT}}"] = BuildCspContent(s),
+            // Also attribute content; entities decode back to the literal
+            // policy, so encoding is free insurance.
+            ["{{SITE.CSP_CONTENT}}"] = System.Net.WebUtility.HtmlEncode(BuildCspContent(s)),
             ["{{SITE.ANALYTICS_HEAD}}"] = BuildAnalyticsHead(s),
             ["{{SITE.GTM_NOSCRIPT}}"] = BuildGtmNoscript(s),
         };
@@ -173,10 +182,16 @@ public class SiteRenderer(
         yield return Path.Combine(TemplatesDir, "seed", "index.html");
     }
 
+    // This JSON is emitted inside <script type="application/ld+json">, so the
+    // encoder must escape '<' and '>' — otherwise a stored "</script>" closes
+    // the block early and everything after it is parsed as markup.
+    // UnsafeRelaxedJsonEscaping does NOT escape them; Create(UnicodeRanges.All)
+    // does, while still leaving Turkish characters readable.
     private static readonly JsonSerializerOptions JsonPretty = new()
     {
         WriteIndented = true,
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(
+            System.Text.Unicode.UnicodeRanges.All),
     };
 
     private static string BuildProfilePageJson(SiteSettings s)
