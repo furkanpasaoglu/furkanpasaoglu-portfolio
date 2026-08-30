@@ -20,7 +20,7 @@ namespace Portfolio.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.15")
+                .HasAnnotation("ProductVersion", "9.0.19")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -46,13 +46,11 @@ namespace Portfolio.Api.Data.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("color");
 
-                    b.Property<List<BlogBlock>>("ContentEn")
-                        .IsRequired()
+                    b.Property<JsonElement>("ContentEn")
                         .HasColumnType("jsonb")
                         .HasColumnName("content_en");
 
-                    b.Property<List<BlogBlock>>("ContentTr")
-                        .IsRequired()
+                    b.Property<JsonElement>("ContentTr")
                         .HasColumnType("jsonb")
                         .HasColumnName("content_tr");
 
@@ -446,6 +444,55 @@ namespace Portfolio.Api.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("skill_category", (string)null);
+                });
+
+            modelBuilder.Entity("Portfolio.Api.Domain.TerminalCommand", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<TerminalCommandLocale>("DataEn")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("data_en");
+
+                    b.Property<TerminalCommandLocale>("DataTr")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("data_tr");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_published");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("terminal_command", (string)null);
                 });
 
             modelBuilder.Entity("Portfolio.Api.Domain.Translation", b =>

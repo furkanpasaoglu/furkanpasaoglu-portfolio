@@ -48,3 +48,8 @@ docker-compose.override.yml
 # ── Tool caches ──
 .vite/
 .claude/
+
+# Local database snapshots pulled from production — never commit.
+portfolio.sql
+portfolio.dump
+*.dump
