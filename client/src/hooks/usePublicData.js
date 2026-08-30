@@ -39,3 +39,9 @@ export const usePublicPersonal = () => useQuery({
   queryFn: () => publicApi.getPersonal(),
   staleTime,
 });
+
+export const usePublicTerminalCommands = (lang) => useQuery({
+  queryKey: ['public', 'terminal-commands', lang],
+  queryFn: () => publicApi.getTerminalCommands(lang),
+  staleTime,
+});

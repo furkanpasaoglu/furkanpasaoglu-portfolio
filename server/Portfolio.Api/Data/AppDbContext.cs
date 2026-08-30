@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Personal> Personals => Set<Personal>();
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
+    public DbSet<TerminalCommand> TerminalCommands => Set<TerminalCommand>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -85,6 +86,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.DataEn).HasColumnName("data_en").HasColumnType("jsonb");
             e.Property(x => x.ContentTr).HasColumnName("content_tr").HasColumnType("jsonb");
             e.Property(x => x.ContentEn).HasColumnName("content_en").HasColumnType("jsonb");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        mb.Entity<TerminalCommand>(e =>
+        {
+            e.ToTable("terminal_command");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.Name).HasColumnName("name").IsRequired().HasMaxLength(32);
+            e.HasIndex(x => x.Name).IsUnique();
+            e.Property(x => x.SortOrder).HasColumnName("sort_order");
+            e.Property(x => x.IsPublished).HasColumnName("is_published");
+            e.Property(x => x.DataTr).HasColumnName("data_tr").HasColumnType("jsonb");
+            e.Property(x => x.DataEn).HasColumnName("data_en").HasColumnType("jsonb");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });

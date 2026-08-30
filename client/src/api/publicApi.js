@@ -11,6 +11,7 @@ export const publicApi = {
   getBlog: (lang) => request(`${API}/public/blog?lang=${lang}`),
   getBlogPost: (slug, lang) => request(`${API}/public/blog/${slug}?lang=${lang}`),
   getTranslations: (lang) => request(`${API}/public/translations?lang=${lang}`),
+  getTerminalCommands: (lang) => request(`${API}/public/terminal-commands?lang=${lang}`),
   getPersonal: () => request(`${API}/public/personal`),
   getSiteSettings: (lang) => request(endpoints.publicSiteSettings(lang)),
   submitContact: (dto) => request(endpoints.publicContact, { method: 'POST', body: dto }),

@@ -291,5 +291,20 @@
       "searchPlaceholder": "Search articles...",
       "noResults": "No results found."
     }
+  },
+  {
+    "section": "terminal",
+    "dataTr": {
+      "greeting": "`ls` paftaları listeler, `cd <ad>` açar. `help` tüm komutlar.",
+      "helpTitle": "Komutlar:",
+      "notFound": "komut bulunamadı",
+      "notFoundHint": "`help` yazarsan hepsini listelerim."
+    },
+    "dataEn": {
+      "greeting": "Type `ls` to list sheets, `cd <name>` to open one. `help` for everything.",
+      "helpTitle": "Commands:",
+      "notFound": "command not found",
+      "notFoundHint": "Type `help` for the list."
+    }
   }
 ]

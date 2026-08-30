@@ -1,0 +1,28 @@
+[
+  {
+    "name": "whoami",
+    "sortOrder": 0,
+    "isPublished": true,
+    "dataTr": {
+      "summary": "kısaca kim olduğum",
+      "body": "Furkan Paşaoğlu\nKıdemli Yazılım Geliştirici · İstanbul\n\n.NET tarafında backend yazıyorum: ASP.NET Core, EF Core,\nPostgreSQL, Dynamics 365 entegrasyonları, CI/CD.\n\nBu site de öyle çalışıyor — `dotnet --info` dener misin?"
+    },
+    "dataEn": {
+      "summary": "who I am, briefly",
+      "body": "Furkan Paşaoğlu\nSenior Software Developer · Istanbul\n\nI write backends on .NET: ASP.NET Core, EF Core, PostgreSQL,\nDynamics 365 integrations, CI/CD.\n\nThis site runs on the same stack — try `dotnet --info`."
+    }
+  },
+  {
+    "name": "stack",
+    "sortOrder": 1,
+    "isPublished": true,
+    "dataTr": {
+      "summary": "bu sitenin kurulumu",
+      "body": "Bu portfolyo bir demo değil, çalışan bir sistem:\n\n  API        .NET 9 Minimal API, FluentValidation\n  Veri       PostgreSQL 17, EF Core, jsonb kolonlar\n  Kimlik     Keycloak OIDC — authorization code + PKCE, BFF\n  İstemci    React 19, Vite, TanStack Query\n  Dağıtım    Docker Compose, Dokploy, Traefik\n\nİçerik de dahil her şey panelden yönetiliyor; bu komut bile."
+    },
+    "dataEn": {
+      "summary": "how this site is built",
+      "body": "This portfolio is not a mockup, it is a running system:\n\n  API        .NET 9 Minimal API, FluentValidation\n  Data       PostgreSQL 17, EF Core, jsonb columns\n  Identity   Keycloak OIDC — authorization code + PKCE, BFF\n  Client     React 19, Vite, TanStack Query\n  Delivery   Docker Compose, Dokploy, Traefik\n\nEverything here is editable from the admin panel — this command included."
+    }
+  }
+]

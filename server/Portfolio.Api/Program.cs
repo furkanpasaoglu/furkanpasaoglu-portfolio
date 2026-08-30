@@ -229,5 +229,6 @@ app.MapUploadsEndpoints();
 app.MapSiteSettingsEndpoints();
 app.MapContactEndpoints();
 app.MapSystemInfoEndpoints();
+app.MapTerminalEndpoints();
 
 app.Run();

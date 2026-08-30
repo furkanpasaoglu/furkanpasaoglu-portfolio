@@ -51,7 +51,14 @@ public class Seeder(
             Slug = r.Slug, SortOrder = r.SortOrder, IsFeatured = r.IsFeatured, IsPublished = r.IsPublished,
             Category = r.Category, Color = r.Color, PublishedAt = r.PublishedAt, Tags = r.Tags ?? new(),
             DataTr = r.DataTr ?? new(), DataEn = r.DataEn ?? new(),
-            ContentTr = r.ContentTr ?? new(), ContentEn = r.ContentEn ?? new(),
+            ContentTr = r.ContentTr, ContentEn = r.ContentEn,
+            CreatedAt = now, UpdatedAt = now,
+        }, ct);
+
+        await SeedFromJsonAsync<TerminalCommandSeedRow, TerminalCommand>("terminal-commands.json", db.TerminalCommands, (r, now) => new TerminalCommand
+        {
+            Name = r.Name, SortOrder = r.SortOrder, IsPublished = r.IsPublished,
+            DataTr = r.DataTr ?? new(), DataEn = r.DataEn ?? new(),
             CreatedAt = now, UpdatedAt = now,
         }, ct);
 
@@ -228,6 +235,15 @@ public class Seeder(
         public List<SkillItem>? Skills { get; set; }
     }
 
+    private class TerminalCommandSeedRow
+    {
+        public string Name { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
+        public bool IsPublished { get; set; }
+        public TerminalCommandLocale? DataTr { get; set; }
+        public TerminalCommandLocale? DataEn { get; set; }
+    }
+
     private class BlogPostSeedRow
     {
         public string Slug { get; set; } = default!;
@@ -240,8 +256,8 @@ public class Seeder(
         public List<string>? Tags { get; set; }
         public BlogPostLocale? DataTr { get; set; }
         public BlogPostLocale? DataEn { get; set; }
-        public List<BlogBlock>? ContentTr { get; set; }
-        public List<BlogBlock>? ContentEn { get; set; }
+        public JsonElement ContentTr { get; set; }
+        public JsonElement ContentEn { get; set; }
     }
 
     private class TranslationSeedRow
