@@ -1,49 +1,40 @@
-import {
-  ActionIcon, Button, ColorInput, Divider, Grid, Group, LoadingOverlay, NumberInput, Paper, Select,
-  Stack, Switch, Tabs, TagsInput, TextInput, Title,
-} from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
-import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconDeviceFloppy } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 import { adminApi } from '../../../api/adminApi';
-import BlogBlockEditor from './BlogBlockEditor';
+import { Button, Field, Input, PageHead, RichEditor, Select, Switch, TagsInput } from '../../ui';
+import { useToast } from '../../ui/hooks';
+import { useForm } from '../../ui/useForm';
+import { isEmptyDoc, toDoc } from '../../../utils/richDocModel';
 import BlogLocaleMeta from './BlogLocaleMeta';
 
-const blockSchema = z.object({
-  type: z.enum(['paragraph', 'heading', 'code', 'note']),
-  text: z.string(),
-  lang: z.string().max(32).nullish(),
-});
-
 const localeSchema = z.object({
-  title: z.string().min(1, 'Required').max(300),
-  excerpt: z.string().min(1, 'Required').max(1000),
-  date: z.string().min(1).max(64),
+  title: z.string().min(1, 'Zorunlu').max(300),
+  excerpt: z.string().min(1, 'Zorunlu').max(1000),
+  date: z.string().min(1, 'Zorunlu').max(64),
   readTime: z.number().int().min(1).max(120),
 });
 
 const schema = z.object({
-  slug: z.string().min(1).max(128).regex(/^[a-z0-9-]+$/, 'Lowercase kebab-case only'),
+  slug: z.string().min(1, 'Zorunlu').max(128).regex(/^[a-z0-9-]+$/, 'Yalnızca küçük harf ve tire'),
   sortOrder: z.number().int().min(0),
   isFeatured: z.boolean(),
   isPublished: z.boolean(),
-  category: z.string().min(1).max(64),
-  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/, 'Valid hex color'),
+  category: z.string().min(1, 'Zorunlu').max(64),
+  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/, 'Geçerli hex renk'),
   publishedAt: z.string().nullable().or(z.literal('')),
   tags: z.array(z.string().max(64)),
   dataTr: localeSchema,
   dataEn: localeSchema,
-  contentTr: z.array(blockSchema),
-  contentEn: z.array(blockSchema),
+  contentTr: z.unknown().refine((v) => !isEmptyDoc(toDoc(v)), { message: 'Zorunlu' }),
+  contentEn: z.unknown().refine((v) => !isEmptyDoc(toDoc(v)), { message: 'Zorunlu' }),
 });
 
-const CATEGORY_OPTIONS = ['.NET', 'AI / ML', 'DevOps', 'Architecture', 'Frontend', 'Tools'];
+const CATEGORIES = ['.NET', 'AI / ML', 'DevOps', 'Architecture', 'Frontend', 'Tools']
+  .map((v) => ({ value: v, label: v }));
 
-const emptyPost = () => ({
+const empty = () => ({
   slug: '',
   sortOrder: 0,
   isFeatured: false,
@@ -54,8 +45,8 @@ const emptyPost = () => ({
   tags: [],
   dataTr: { title: '', excerpt: '', date: '', readTime: 5 },
   dataEn: { title: '', excerpt: '', date: '', readTime: 5 },
-  contentTr: [],
-  contentEn: [],
+  contentTr: toDoc(''),
+  contentEn: toDoc(''),
 });
 
 export default function BlogEdit() {
@@ -63,6 +54,8 @@ export default function BlogEdit() {
   const isNew = id === 'new';
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const toast = useToast();
+  const [tab, setTab] = useState('tr');
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'blog', id],
@@ -70,131 +63,120 @@ export default function BlogEdit() {
     enabled: !isNew,
   });
 
-  const form = useForm({
-    mode: 'uncontrolled',
-    initialValues: emptyPost(),
-    validate: zodResolver(schema),
-  });
+  const form = useForm({ initial: empty(), schema });
+  const { reset } = form;
 
   useEffect(() => {
-    if (data) {
-      form.setValues({
-        slug: data.slug,
-        sortOrder: data.sortOrder,
-        isFeatured: data.isFeatured,
-        isPublished: data.isPublished,
-        category: data.category,
-        color: data.color,
-        publishedAt: data.publishedAt ?? '',
-        tags: data.tags ?? [],
-        dataTr: data.dataTr,
-        dataEn: data.dataEn,
-        contentTr: data.contentTr ?? [],
-        contentEn: data.contentEn ?? [],
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+    if (!data) return;
+    reset({
+      ...empty(),
+      ...data,
+      publishedAt: data.publishedAt ?? '',
+      tags: data.tags ?? [],
+      // Notes written before the editor arrive as a block array.
+      contentTr: toDoc(data.contentTr),
+      contentEn: toDoc(data.contentEn),
+    });
+  }, [data, reset]);
 
   const saveMut = useMutation({
     mutationFn: (values) => {
-      const payload = {
-        ...values,
-        publishedAt: values.publishedAt?.trim() ? values.publishedAt : null,
-      };
+      const payload = { ...values, publishedAt: values.publishedAt?.trim() ? values.publishedAt : null };
       return isNew ? adminApi.createBlog(payload) : adminApi.updateBlog(id, payload);
     },
     onSuccess: (saved) => {
       qc.invalidateQueries({ queryKey: ['admin', 'blog'] });
       qc.invalidateQueries({ queryKey: ['public', 'blog'] });
-      notifications.show({ message: 'Saved', color: 'green' });
+      toast('Kaydedildi.', 'ok');
       if (isNew && saved?.id) navigate(`/admin/blog/${saved.id}`, { replace: true });
     },
-    onError: (e) => {
-      notifications.show({
-        title: 'Save failed',
-        message: e?.data?.errors ? JSON.stringify(e.data.errors) : e.message,
-        color: 'red',
-      });
-    },
+    onError: (e) => toast(e?.data?.title ?? e?.message ?? 'Kaydedilemedi.', 'err'),
   });
 
-  const onSubmit = form.onSubmit((values) => saveMut.mutate(values));
+  const submit = (e) => {
+    e?.preventDefault?.();
+    const result = form.validate();
+    if (!result.ok) { toast('Eksik ya da hatalı alanlar var.', 'err'); return; }
+    saveMut.mutate(result.data);
+  };
+
+  if (isLoading) return <p className="fp-loading">Not okunuyor…</p>;
+
+  const contentField = tab === 'tr' ? 'contentTr' : 'contentEn';
 
   return (
-    <Stack gap="lg" pos="relative">
-      <LoadingOverlay visible={isLoading} />
-
-      <Group justify="space-between">
-        <Group gap="xs">
-          <ActionIcon variant="subtle" onClick={() => navigate('/admin/blog')}>
-            <IconArrowLeft size={18} />
-          </ActionIcon>
-          <Title order={2}>{isNew ? 'New post' : 'Edit post'}</Title>
-        </Group>
-        <Button onClick={onSubmit} loading={saveMut.isPending} leftSection={<IconDeviceFloppy size={16} />}>
-          {isNew ? 'Create' : 'Save'}
+    <form onSubmit={submit}>
+      <PageHead eyebrow="İçerik · Not" title={isNew ? 'Yeni not' : form.value('dataTr.title') || 'Not'}>
+        <Button onClick={() => navigate('/admin/blog')}>Listeye dön</Button>
+        <Button variant="primary" busy={saveMut.isPending} onClick={submit}>
+          {isNew ? 'Oluştur' : 'Kaydet'}
         </Button>
-      </Group>
+      </PageHead>
 
-      <form onSubmit={onSubmit}>
-        <Stack gap="md">
-          <Paper withBorder p="lg" radius="md">
-            <Stack gap="md">
-              <Title order={4}>Meta</Title>
-              <Grid>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <TextInput label="Slug" placeholder="my-post" required {...form.getInputProps('slug')} />
-                </Grid.Col>
-                <Grid.Col span={{ base: 6, sm: 3 }}>
-                  <NumberInput label="Sort order" min={0} {...form.getInputProps('sortOrder')} />
-                </Grid.Col>
-                <Grid.Col span={{ base: 6, sm: 3 }}>
-                  <Stack gap={6} mt="lg">
-                    <Switch label="Published" {...form.getInputProps('isPublished', { type: 'checkbox' })} />
-                    <Switch label="Featured" {...form.getInputProps('isFeatured', { type: 'checkbox' })} />
-                  </Stack>
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <Select label="Category" data={CATEGORY_OPTIONS} searchable {...form.getInputProps('category')} />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <ColorInput label="Color" format="hex" {...form.getInputProps('color')} />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <TextInput
-                    label="Published at (YYYY-MM-DD)"
-                    placeholder="2026-04-01"
-                    {...form.getInputProps('publishedAt')}
-                  />
-                </Grid.Col>
-                <Grid.Col span={12}>
-                  <TagsInput label="Tags (language-neutral)" placeholder="Type and press Enter" {...form.getInputProps('tags')} />
-                </Grid.Col>
-              </Grid>
-            </Stack>
-          </Paper>
+      <div className="fp-form">
+        <section className="fp-panel fp-section">
+          <p className="fp-panel-title">Künye</p>
 
-          <Paper withBorder p="lg" radius="md">
-            <Tabs defaultValue="tr" variant="outline">
-              <Tabs.List>
-                <Tabs.Tab value="tr">TR</Tabs.Tab>
-                <Tabs.Tab value="en">EN</Tabs.Tab>
-              </Tabs.List>
-              <Tabs.Panel value="tr" pt="lg">
-                <BlogLocaleMeta form={form} prefix="dataTr" />
-                <Divider my="lg" label="Content blocks" labelPosition="left" />
-                <BlogBlockEditor form={form} field="contentTr" />
-              </Tabs.Panel>
-              <Tabs.Panel value="en" pt="lg">
-                <BlogLocaleMeta form={form} prefix="dataEn" />
-                <Divider my="lg" label="Content blocks" labelPosition="left" />
-                <BlogBlockEditor form={form} field="contentEn" />
-              </Tabs.Panel>
-            </Tabs>
-          </Paper>
-        </Stack>
-      </form>
-    </Stack>
+          <div className="fp-grid">
+            <Field label="Slug" required error={form.error('slug')}>
+              <Input mono placeholder="not-adi" {...form.bind('slug')} />
+            </Field>
+            <Field label="Kategori" error={form.error('category')}>
+              <Select options={CATEGORIES} {...form.bind('category')} />
+            </Field>
+            <Field label="Sıra" error={form.error('sortOrder')}>
+              <Input type="number" min="0" {...form.bind('sortOrder', { number: true })} />
+            </Field>
+            <Field label="Yayın tarihi" hint="YYYY-AA-GG, boş bırakılabilir" error={form.error('publishedAt')}>
+              <Input mono placeholder="2026-02-15" {...form.bind('publishedAt')} />
+            </Field>
+            <Field label="Renk" error={form.error('color')}>
+              <div className="fp-inline">
+                <input
+                  className="fp-color"
+                  type="color"
+                  value={form.value('color')}
+                  onChange={(e) => form.set('color', e.target.value)}
+                  aria-label="Renk seç"
+                />
+                <Input mono {...form.bind('color')} />
+              </div>
+            </Field>
+          </div>
+
+          <Field label="Etiketler" error={form.error('tags')}>
+            <TagsInput value={form.value('tags')} onChange={(v) => form.set('tags', v)} />
+          </Field>
+
+          <div className="fp-switches">
+            <Switch label="Yayında" {...form.bindCheck('isPublished')} />
+            <Switch label="Öne çıkan" {...form.bindCheck('isFeatured')} />
+          </div>
+        </section>
+
+        <section className="fp-panel fp-section">
+          <div className="fp-tabs">
+            <button type="button" className={tab === 'tr' ? 'fp-tab fp-tab-on' : 'fp-tab'} onClick={() => setTab('tr')}>Türkçe</button>
+            <button type="button" className={tab === 'en' ? 'fp-tab fp-tab-on' : 'fp-tab'} onClick={() => setTab('en')}>English</button>
+          </div>
+
+          <BlogLocaleMeta form={form} prefix={tab === 'tr' ? 'dataTr' : 'dataEn'} />
+
+          <hr className="fp-rule" />
+
+          <Field
+            label="Not"
+            required
+            hint="Başlık, madde listesi, alıntı ve kod bloğu kullanabilirsin."
+            error={form.error(contentField)}
+          >
+            <RichEditor
+              value={form.value(contentField)}
+              onChange={(doc) => form.set(contentField, doc)}
+            />
+          </Field>
+        </section>
+      </div>
+    </form>
   );
 }

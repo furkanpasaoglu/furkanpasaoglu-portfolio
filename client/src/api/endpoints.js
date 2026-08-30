@@ -1,6 +1,6 @@
 // Base API endpoints. In dev (vite), these hit http://localhost:8080/api via proxy.
 // In prod (nginx), /api is same-origin.
-export const API_BASE = '/api';
+const API_BASE = '/api';
 
 export const endpoints = {
   // Public
@@ -32,6 +32,11 @@ export const endpoints = {
   adminBlog: `${API_BASE}/admin/blog`,
   adminBlogItem: (id) => `${API_BASE}/admin/blog/${id}`,
   adminBlogPublish: (id) => `${API_BASE}/admin/blog/${id}/publish`,
+
+  // Admin — Terminal
+  adminTerminalCommands: `${API_BASE}/admin/terminal-commands`,
+  adminTerminalCommand: (id) => `${API_BASE}/admin/terminal-commands/${id}`,
+  adminTerminalCommandPublish: (id) => `${API_BASE}/admin/terminal-commands/${id}/publish`,
 
   // Admin — Translations
   adminTranslations: `${API_BASE}/admin/translations`,

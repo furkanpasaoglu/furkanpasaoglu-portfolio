@@ -16,6 +16,8 @@ import BlogEdit from './pages/blog/BlogEdit';
 import TranslationsEditor from './pages/translations/TranslationsEditor';
 import PersonalEdit from './pages/personal/PersonalEdit';
 import SiteSettingsEdit from './pages/site-settings/SiteSettingsEdit';
+import TerminalCommandsList from './pages/terminal/TerminalCommandsList';
+import TerminalCommandEdit from './pages/terminal/TerminalCommandEdit';
 import MessagesList from './pages/messages/MessagesList';
 
 export default function AdminRouter() {
@@ -35,6 +37,8 @@ export default function AdminRouter() {
             <Route path="blog" element={<BlogList />} />
             <Route path="blog/:id" element={<BlogEdit />} />
             <Route path="translations" element={<TranslationsEditor />} />
+            <Route path="terminal" element={<TerminalCommandsList />} />
+            <Route path="terminal/:id" element={<TerminalCommandEdit />} />
             <Route path="personal" element={<PersonalEdit />} />
             <Route path="site-settings" element={<SiteSettingsEdit />} />
             <Route path="messages" element={<MessagesList />} />

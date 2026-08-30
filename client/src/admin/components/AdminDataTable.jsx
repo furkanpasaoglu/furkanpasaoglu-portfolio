@@ -1,17 +1,20 @@
-import { ActionIcon, Badge, Button, Group, Stack, Table, Title, Text, Tooltip } from '@mantine/core';
-import { IconEdit, IconPlus, IconTrash, IconEye, IconEyeOff } from '@tabler/icons-react';
-import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
+import { Button, Confirm, PageHead, Pill } from '../ui';
+import { useConfirm, useToast } from '../ui/hooks';
 
-const StatusBadge = ({ published }) =>
-  published
-    ? <Badge color="green" variant="light" size="sm">Published</Badge>
-    : <Badge color="gray" variant="light" size="sm">Draft</Badge>;
-
+/**
+ * The shared list surface. Same contract as before so every list page keeps
+ * working; only the rendering changed.
+ *
+ * `intro` renders between the header and the table, for a page that carries
+ * a setting alongside its list.
+ */
 export default function AdminDataTable({
   title,
+  eyebrow,
   headerExtras,
+  intro,
   newButton,
   listKey,
   publicKey,
@@ -22,11 +25,12 @@ export default function AdminDataTable({
   deleteToast,
   editPath,
   columns,
-  minWidth = 700,
-  emptyLabel = 'No records.',
+  emptyLabel = 'Kayıt yok.',
 }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const toast = useToast();
+  const confirm = useConfirm();
   const { data, isLoading } = useQuery({ queryKey: listKey, queryFn });
 
   const invalidate = () => {
@@ -37,93 +41,101 @@ export default function AdminDataTable({
   const publishMut = useMutation({
     mutationFn: (id) => publishFn(id),
     onSuccess: invalidate,
+    onError: () => toast('Yayın durumu değiştirilemedi.', 'err'),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id) => deleteFn(id),
     onSuccess: () => {
       invalidate();
-      if (deleteToast) notifications.show({ message: deleteToast, color: 'red' });
+      toast(deleteToast ?? 'Kayıt silindi.', 'ok');
     },
+    onError: () => toast('Kayıt silinemedi.', 'err'),
   });
 
-  const handleDelete = (row) => {
-    const msg = typeof deleteConfirm === 'function' ? deleteConfirm(row) : deleteConfirm;
-    if (msg && !window.confirm(msg)) return;
-    deleteMut.mutate(row.id);
-  };
-
-  const colCount = columns.length + 1; // +1 for Actions column
-
-  const rows = (data ?? []).map((r) => (
-    <Table.Tr key={r.id}>
-      {columns.map((col, i) => (
-        <Table.Td key={col.header ?? i}>{col.render(r)}</Table.Td>
-      ))}
-      <Table.Td>
-        <Group gap={4} wrap="nowrap" justify="flex-end">
-          {publishFn && (
-            <Tooltip label={r.isPublished ? 'Unpublish' : 'Publish'}>
-              <ActionIcon
-                variant="subtle"
-                color={r.isPublished ? 'yellow' : 'green'}
-                onClick={() => publishMut.mutate(r.id)}
-                loading={publishMut.isPending && publishMut.variables === r.id}
-              >
-                {r.isPublished ? <IconEyeOff size={16} /> : <IconEye size={16} />}
-              </ActionIcon>
-            </Tooltip>
-          )}
-          <Tooltip label="Edit">
-            <ActionIcon variant="subtle" onClick={() => navigate(editPath(r))}>
-              <IconEdit size={16} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Delete">
-            <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(r)}>
-              <IconTrash size={16} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-      </Table.Td>
-    </Table.Tr>
-  ));
+  const rows = data ?? [];
+  const colCount = columns.length + 1;
 
   return (
-    <Stack gap="lg">
-      <Group justify="space-between">
-        <Title order={2}>{title}</Title>
-        <Group gap="xs">
-          {headerExtras}
-          {newButton && (
-            <Button component={Link} to={newButton.to} leftSection={<IconPlus size={16} />}>
-              {newButton.label}
-            </Button>
-          )}
-        </Group>
-      </Group>
+    <>
+      <PageHead eyebrow={eyebrow} title={title}>
+        {headerExtras}
+        {newButton && (
+          <Link className="fp-btn fp-btn-primary" to={newButton.to}>{newButton.label}</Link>
+        )}
+      </PageHead>
 
-      <Table.ScrollContainer minWidth={minWidth}>
-        <Table highlightOnHover verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
+      {intro}
+
+      <div className="fp-table-wrap">
+        <table className="fp-table">
+          <thead>
+            <tr>
               {columns.map((col, i) => (
-                <Table.Th key={col.header ?? i} ta={col.align}>{col.header}</Table.Th>
+                <th key={col.header ?? i} className={col.align === 'right' ? 'fp-right' : undefined}>
+                  {col.header}
+                </th>
               ))}
-              <Table.Th ta="right">Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {isLoading ? (
-              <Table.Tr><Table.Td colSpan={colCount}><Text ta="center" c="dimmed">Loading…</Text></Table.Td></Table.Tr>
-            ) : rows.length === 0 ? (
-              <Table.Tr><Table.Td colSpan={colCount}><Text ta="center" c="dimmed">{emptyLabel}</Text></Table.Td></Table.Tr>
-            ) : rows}
-          </Table.Tbody>
-        </Table>
-      </Table.ScrollContainer>
-    </Stack>
+              <th className="fp-right">İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading && (
+              <tr><td colSpan={colCount}><div className="fp-empty">Yükleniyor…</div></td></tr>
+            )}
+            {!isLoading && rows.length === 0 && (
+              <tr><td colSpan={colCount}><div className="fp-empty">{emptyLabel}</div></td></tr>
+            )}
+            {!isLoading && rows.map((r) => (
+              <tr key={r.id}>
+                {columns.map((col, i) => (
+                  <td key={col.header ?? i} className={col.align === 'right' ? 'fp-right' : undefined}>
+                    {col.render(r)}
+                  </td>
+                ))}
+                <td className="fp-right">
+                  <div className="fp-btns fp-row-actions">
+                    {publishFn && (
+                      <Button
+                        variant="quiet"
+                        busy={publishMut.isPending && publishMut.variables === r.id}
+                        onClick={() => publishMut.mutate(r.id)}
+                        title={r.isPublished ? 'Yayından kaldır' : 'Yayımla'}
+                      >
+                        {r.isPublished ? 'Gizle' : 'Yayımla'}
+                      </Button>
+                    )}
+                    <Button variant="quiet" onClick={() => navigate(editPath(r))}>Düzenle</Button>
+                    <Button variant="quiet" onClick={() => confirm.ask(r)}>Sil</Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <Confirm
+        open={!!confirm.pending}
+        title="Silinsin mi?"
+        body={
+          confirm.pending
+            ? (typeof deleteConfirm === 'function'
+              ? deleteConfirm(confirm.pending)
+              : (deleteConfirm ?? 'Bu kayıt kalıcı olarak silinecek.'))
+            : ''
+        }
+        onCancel={confirm.cancel}
+        onConfirm={() => {
+          const row = confirm.pending;
+          confirm.cancel();
+          if (row) deleteMut.mutate(row.id);
+        }}
+      />
+    </>
   );
 }
 
-export { StatusBadge };
+export function StatusBadge({ published }) {
+  return <Pill on={published}>{published ? 'Yayında' : 'Taslak'}</Pill>;
+}

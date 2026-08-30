@@ -1,9 +1,11 @@
-import { Button, Card, Center, Stack, Text, Title } from '@mantine/core';
-import { IconLogin } from '@tabler/icons-react';
 import { useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMe } from './useAuth';
 
+/**
+ * Sign-in is a redirect to Keycloak — the panel never sees a password, so
+ * there is no form here, only the handoff and whatever Keycloak sent back.
+ */
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,33 +19,31 @@ export default function LoginPage() {
     if (me) navigate(from, { replace: true });
   }, [me, from, navigate]);
 
-  const handleLogin = () => {
-    window.location.href = '/api/admin/auth/login';
-  };
-
   return (
-    <Center mih="100vh" p="md">
-      <Card withBorder shadow="md" padding="xl" radius="md" w={360}>
-        <Stack gap="md">
-          <Title order={3} ta="center">Admin Sign in</Title>
-          <Text c="dimmed" size="sm" ta="center">
-            You will be redirected to Keycloak to sign in.
-          </Text>
-          {error && (
-            <Text c="red" size="sm" ta="center">
-              Sign-in error: {error}
-            </Text>
-          )}
-          <Button
-            leftSection={<IconLogin size={16} />}
-            onClick={handleLogin}
-            fullWidth
-            mt="sm"
-          >
-            Continue with SSO
-          </Button>
-        </Stack>
-      </Card>
-    </Center>
+    <div className="fp fp-gate">
+      <div className="fp-gate-card">
+        <div className="fp-eyebrow">Kimlik doğrulama</div>
+        <h1 className="fp-h">fp / admin</h1>
+
+        <p className="fp-gate-note">
+          Giriş Keycloak üzerinden yapılıyor. Parolan bu panele hiç uğramıyor —
+          devam edince kimlik sunucusuna yönlendirileceksin.
+        </p>
+
+        {error && (
+          <p className="fp-error">
+            Giriş başarısız: {error}
+          </p>
+        )}
+
+        <button
+          type="button"
+          className="fp-btn fp-btn-primary fp-gate-btn"
+          onClick={() => { window.location.href = '/api/admin/auth/login'; }}
+        >
+          Keycloak ile devam et
+        </button>
+      </div>
+    </div>
   );
 }

@@ -1,17 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Alert, Badge, Button, Code, Grid, Group, LoadingOverlay, Paper, Select, Stack, Tabs, Textarea,
-  Title, Text,
-} from '@mantine/core';
-import { IconAlertTriangle, IconDeviceFloppy } from '@tabler/icons-react';
-import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../../api/adminApi';
+import { Button, PageHead } from '../../ui';
+import { useToast } from '../../ui/hooks';
 
+/**
+ * Site metinleri. Each section is a bilingual JSON blob — the public site's
+ * prose lives here, so this is where copy is changed without a deploy.
+ *
+ * JSON is edited as text on purpose: the shapes differ per section and a
+ * generated form would fight every new key. The parse error is shown inline
+ * and saving is blocked until it is valid.
+ */
 const LIST_KEY = ['admin', 'translations'];
 
 export default function TranslationsEditor() {
   const qc = useQueryClient();
+  const toast = useToast();
   const { data: list = [], isLoading } = useQuery({
     queryKey: LIST_KEY,
     queryFn: () => adminApi.listTranslations(),
@@ -23,22 +28,35 @@ export default function TranslationsEditor() {
   const [trError, setTrError] = useState(null);
   const [enError, setEnError] = useState(null);
 
-  const sections = useMemo(() => list.map((t) => t.section), [list]);
+  // `terminal` is a translation like any other, but it has a proper form on
+  // the Terminal page. Two doors to the same data is how they drift apart.
+  const sections = useMemo(
+    () => list.map((t) => t.section).filter((s) => s !== 'terminal'),
+    [list],
+  );
+  const current = list.find((t) => t.section === section);
 
   useEffect(() => {
     if (!section && sections.length > 0) setSection(sections[0]);
   }, [sections, section]);
 
-  const current = list.find((t) => t.section === section);
-
   useEffect(() => {
-    if (current) {
-      setTrText(JSON.stringify(current.dataTr, null, 2));
-      setEnText(JSON.stringify(current.dataEn, null, 2));
-      setTrError(null);
-      setEnError(null);
-    }
-  }, [current?.section, current?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!current) return;
+    setTrText(JSON.stringify(current.dataTr ?? {}, null, 2));
+    setEnText(JSON.stringify(current.dataEn ?? {}, null, 2));
+    setTrError(null);
+    setEnError(null);
+  }, [current]);
+
+  const saveMut = useMutation({
+    mutationFn: ({ key, dataTr, dataEn }) => adminApi.upsertTranslation(key, { dataTr, dataEn }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: LIST_KEY });
+      qc.invalidateQueries({ queryKey: ['public', 'translations'] });
+      toast('Metinler kaydedildi.', 'ok');
+    },
+    onError: (e) => toast(e?.message ?? 'Kaydedilemedi.', 'err'),
+  });
 
   const parse = (text, setError) => {
     try {
@@ -51,111 +69,70 @@ export default function TranslationsEditor() {
     }
   };
 
-  const saveMut = useMutation({
-    mutationFn: ({ section: s, dataTr, dataEn }) => adminApi.upsertTranslation(s, { dataTr, dataEn }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: LIST_KEY });
-      qc.invalidateQueries({ queryKey: ['public', 'translations'] });
-      notifications.show({ message: 'Saved', color: 'green' });
-    },
-    onError: (e) => notifications.show({ title: 'Save failed', message: e.message, color: 'red' }),
-  });
-
-  const handleSave = () => {
-    const tr = parse(trText, setTrError);
-    const en = parse(enText, setEnError);
-    if (tr == null || en == null) {
-      notifications.show({ message: 'Fix JSON errors before saving', color: 'red' });
+  const save = () => {
+    const dataTr = parse(trText, setTrError);
+    const dataEn = parse(enText, setEnError);
+    if (dataTr === null || dataEn === null) {
+      toast('JSON geçersiz — kaydetmeden önce düzelt.', 'err');
       return;
     }
-    saveMut.mutate({ section, dataTr: tr, dataEn: en });
+    saveMut.mutate({ key: section, dataTr, dataEn });
   };
 
+  if (isLoading) return <p className="fp-loading">Metinler okunuyor…</p>;
+
   return (
-    <Stack gap="lg" pos="relative">
-      <LoadingOverlay visible={isLoading} />
-      <Group justify="space-between">
-        <Title order={2}>Translations</Title>
-        <Button
-          onClick={handleSave}
-          loading={saveMut.isPending}
-          leftSection={<IconDeviceFloppy size={16} />}
-          disabled={!section}
-        >
-          Save section
+    <>
+      <PageHead eyebrow="İçerik" title="Metinler">
+        <Button variant="primary" busy={saveMut.isPending} onClick={save} disabled={!current}>
+          Kaydet
         </Button>
-      </Group>
+      </PageHead>
 
-      <Alert color="blue" variant="light" icon={<IconAlertTriangle size={16} />}>
-        Advanced editor. Each section is a JSON object used by the frontend as <Code>t.&lt;section&gt;.&lt;key&gt;</Code>.
-        Keep the same shape in both languages; changing keys requires matching updates in the React components.
-      </Alert>
+      <p className="fp-note">
+        Public sitedeki sabit metinler burada duruyor. <strong>about</strong> bölümündeki
+        <code> p1 · p2 · p3</code> Künye paftasının paragrafları, <strong>hero</strong> içindeki
+        <code> desc</code> ise Kapak paftasının giriş metni.
+      </p>
 
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 4 }}>
-          <Paper withBorder p="md" radius="md">
-            <Stack gap="xs">
-              <Text fw={500}>Section</Text>
-              <Select
-                data={sections}
-                value={section}
-                onChange={setSection}
-                allowDeselect={false}
-                searchable
-                placeholder={sections.length === 0 ? 'No sections' : 'Pick a section'}
-              />
-              {current && (
-                <Text size="xs" c="dimmed">
-                  Last updated: {new Date(current.updatedAt).toLocaleString()}
-                </Text>
-              )}
-            </Stack>
-          </Paper>
-        </Grid.Col>
+      <div className="fp-tabs">
+        {sections.map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={s === section ? 'fp-tab fp-tab-on' : 'fp-tab'}
+            onClick={() => setSection(s)}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
 
-        <Grid.Col span={{ base: 12, sm: 8 }}>
-          <Paper withBorder p="md" radius="md">
-            <Tabs defaultValue="tr" variant="outline">
-              <Tabs.List>
-                <Tabs.Tab value="tr" rightSection={trError ? <Badge color="red" size="xs">!</Badge> : null}>
-                  TR
-                </Tabs.Tab>
-                <Tabs.Tab value="en" rightSection={enError ? <Badge color="red" size="xs">!</Badge> : null}>
-                  EN
-                </Tabs.Tab>
-              </Tabs.List>
-              <Tabs.Panel value="tr" pt="md">
-                <JsonPane text={trText} setText={setTrText} error={trError} />
-              </Tabs.Panel>
-              <Tabs.Panel value="en" pt="md">
-                <JsonPane text={enText} setText={setEnText} error={enError} />
-              </Tabs.Panel>
-            </Tabs>
-          </Paper>
-        </Grid.Col>
-      </Grid>
-    </Stack>
-  );
-}
+      {current && (
+        <div className="fp-json-grid">
+          <div>
+            <span className="fp-label">Türkçe</span>
+            <textarea
+              className="fp-textarea fp-mono fp-json"
+              value={trText}
+              onChange={(e) => { setTrText(e.target.value); setTrError(null); }}
+              spellCheck="false"
+            />
+            {trError && <p className="fp-error">{trError}</p>}
+          </div>
 
-function JsonPane({ text, setText, error }) {
-  return (
-    <Stack gap="xs">
-      <Textarea
-        value={text}
-        onChange={(e) => setText(e.currentTarget.value)}
-        minRows={18}
-        autosize
-        styles={{
-          input: {
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-            fontSize: 13,
-            lineHeight: 1.5,
-          },
-        }}
-        error={error || undefined}
-      />
-      {error && <Text c="red" size="xs">JSON parse error: {error}</Text>}
-    </Stack>
+          <div>
+            <span className="fp-label">English</span>
+            <textarea
+              className="fp-textarea fp-mono fp-json"
+              value={enText}
+              onChange={(e) => { setEnText(e.target.value); setEnError(null); }}
+              spellCheck="false"
+            />
+            {enError && <p className="fp-error">{enError}</p>}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

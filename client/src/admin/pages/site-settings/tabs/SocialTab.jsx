@@ -1,37 +1,64 @@
-import { Grid, NumberInput, Select, Stack, Tabs, Textarea, TextInput } from '@mantine/core';
+import { Field, Input, Select, Textarea } from '../../../ui';
+import LangTabs from './LangTabs';
 
-function LocaleFields({ form, prefix }) {
-  return (
-    <Grid>
-      <Grid.Col span={12}><TextInput label="OG Title" required {...form.getInputProps(`${prefix}.ogTitle`)} /></Grid.Col>
-      <Grid.Col span={12}><Textarea label="OG Description" required minRows={2} autosize {...form.getInputProps(`${prefix}.ogDescription`)} /></Grid.Col>
-      <Grid.Col span={12}><TextInput label="OG Image Alt" required {...form.getInputProps(`${prefix}.ogImageAlt`)} /></Grid.Col>
-      <Grid.Col span={12}><TextInput label="Twitter Title" required {...form.getInputProps(`${prefix}.twitterTitle`)} /></Grid.Col>
-      <Grid.Col span={12}><Textarea label="Twitter Description" required minRows={2} autosize {...form.getInputProps(`${prefix}.twitterDescription`)} /></Grid.Col>
-      <Grid.Col span={12}><TextInput label="Site Name" required {...form.getInputProps(`${prefix}.siteName`)} /></Grid.Col>
-    </Grid>
-  );
-}
+const CARDS = [
+  { value: 'summary', label: 'summary' },
+  { value: 'summary_large_image', label: 'summary_large_image' },
+];
 
 export default function SocialTab({ form }) {
   return (
-    <Stack gap="lg">
-      <Tabs defaultValue="tr" variant="pills">
-        <Tabs.List><Tabs.Tab value="tr">TR</Tabs.Tab><Tabs.Tab value="en">EN</Tabs.Tab></Tabs.List>
-        <Tabs.Panel value="tr" pt="md"><LocaleFields form={form} prefix="dataTr" /></Tabs.Panel>
-        <Tabs.Panel value="en" pt="md"><LocaleFields form={form} prefix="dataEn" /></Tabs.Panel>
-      </Tabs>
-      <Grid>
-        <Grid.Col span={12}><TextInput label="OG Image URL" {...form.getInputProps('branding.ogImageUrl')} /></Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}><NumberInput label="OG Image Width" {...form.getInputProps('branding.ogImageWidth')} /></Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}><NumberInput label="OG Image Height" {...form.getInputProps('branding.ogImageHeight')} /></Grid.Col>
-        <Grid.Col span={12}><TextInput label="Twitter Image URL" {...form.getInputProps('branding.twitterImageUrl')} /></Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Select label="Twitter Card"
-                  data={['summary', 'summary_large_image']}
-                  {...form.getInputProps('branding.twitterCard')} />
-        </Grid.Col>
-      </Grid>
-    </Stack>
+    <>
+      <LangTabs>
+        {(lang) => {
+          const p = lang === 'tr' ? 'dataTr' : 'dataEn';
+          return (
+            <>
+              <Field label="OG başlık" required error={form.error(`${p}.ogTitle`)}>
+                <Input {...form.bind(`${p}.ogTitle`)} />
+              </Field>
+              <Field label="OG açıklama" required error={form.error(`${p}.ogDescription`)}>
+                <Textarea rows={3} {...form.bind(`${p}.ogDescription`)} />
+              </Field>
+              <Field label="OG görsel alt metni" required error={form.error(`${p}.ogImageAlt`)}>
+                <Input {...form.bind(`${p}.ogImageAlt`)} />
+              </Field>
+              <Field label="Twitter başlık" required error={form.error(`${p}.twitterTitle`)}>
+                <Input {...form.bind(`${p}.twitterTitle`)} />
+              </Field>
+              <Field label="Twitter açıklama" required error={form.error(`${p}.twitterDescription`)}>
+                <Textarea rows={3} {...form.bind(`${p}.twitterDescription`)} />
+              </Field>
+              <Field label="Site adı" required error={form.error(`${p}.siteName`)}>
+                <Input {...form.bind(`${p}.siteName`)} />
+              </Field>
+            </>
+          );
+        }}
+      </LangTabs>
+
+      <hr className="fp-rule" />
+
+      <Field label="OG görsel adresi">
+        <Input mono {...form.bind('branding.ogImageUrl')} />
+      </Field>
+
+      <div className="fp-grid">
+        <Field label="OG görsel genişlik">
+          <Input type="number" {...form.bind('branding.ogImageWidth', { number: true })} />
+        </Field>
+        <Field label="OG görsel yükseklik">
+          <Input type="number" {...form.bind('branding.ogImageHeight', { number: true })} />
+        </Field>
+      </div>
+
+      <Field label="Twitter görsel adresi">
+        <Input mono {...form.bind('branding.twitterImageUrl')} />
+      </Field>
+
+      <Field label="Twitter kart türü">
+        <Select options={CARDS} {...form.bind('branding.twitterCard')} />
+      </Field>
+    </>
   );
 }

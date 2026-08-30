@@ -43,6 +43,14 @@ export const adminApi = {
   deleteBlog: (id) => del(endpoints.adminBlogItem(id)),
   publishBlog: (id) => post(endpoints.adminBlogPublish(id)),
 
+  // ── Terminal ──
+  listTerminalCommands: () => get(endpoints.adminTerminalCommands),
+  getTerminalCommand: (id) => get(endpoints.adminTerminalCommand(id)),
+  createTerminalCommand: (dto) => post(endpoints.adminTerminalCommands, dto),
+  updateTerminalCommand: (id, dto) => put(endpoints.adminTerminalCommand(id), dto),
+  deleteTerminalCommand: (id) => del(endpoints.adminTerminalCommand(id)),
+  publishTerminalCommand: (id) => post(endpoints.adminTerminalCommandPublish(id)),
+
   // ── Translations ──
   listTranslations: () => get(endpoints.adminTranslations),
   getTranslation: (section) => get(endpoints.adminTranslation(section)),

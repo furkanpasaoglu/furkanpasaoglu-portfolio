@@ -1,127 +1,71 @@
-import {
-  Button, Grid, Group, NumberInput, Paper, PasswordInput, Stack, Switch, Tabs, Textarea, TextInput, Title, Text,
-} from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { IconMailForward } from '@tabler/icons-react';
-import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
-import { adminApi } from '../../../../api/adminApi';
+import { Field, Input, Switch, Textarea } from '../../../ui';
+import LangTabs from './LangTabs';
 
-export default function CommunicationsTab({ form }) {
-  const v = form.getValues();
-  const com = v.communications ?? {};
-  const smtp = com.smtp ?? {};
-  const autoReply = com.autoReply ?? {};
-  const [testTo, setTestTo] = useState(com.adminNotifyEmail ?? '');
-
-  const testMut = useMutation({
-    mutationFn: (to) => adminApi.testSmtp(to),
-    onSuccess: () => notifications.show({ message: 'Test mail sent', color: 'green' }),
-    onError: (e) => notifications.show({ title: 'Test failed', message: e.message, color: 'red' }),
-  });
+export default function CommunicationsTab({ form, onTestSmtp, testing }) {
+  const smtpOn = !!form.value('communications.smtp.enabled');
+  const replyOn = !!form.value('communications.autoReply.enabled');
 
   return (
-    <Stack gap="xl">
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Title order={4}>SMTP</Title>
-          <Switch
-            label="SMTP enabled (actually send messages)"
-            checked={!!smtp.enabled}
-            onChange={(e) => form.setFieldValue('communications.smtp.enabled', e.currentTarget.checked)}
-          />
-          <Grid>
-            <Grid.Col span={{ base: 12, sm: 8 }}>
-              <TextInput label="Host" placeholder="smtp.gmail.com"
-                         {...form.getInputProps('communications.smtp.host')} />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 4 }}>
-              <NumberInput label="Port" min={1} max={65535}
-                           {...form.getInputProps('communications.smtp.port')} />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <TextInput label="Username" {...form.getInputProps('communications.smtp.username')} />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <PasswordInput
-                label="Password"
-                description="Leave blank to keep the existing password"
-                placeholder={smtp.password ? '••••••••' : 'Password'}
-                {...form.getInputProps('communications.smtp.password')}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <TextInput label="From Address" placeholder="noreply@example.com"
-                         {...form.getInputProps('communications.smtp.fromAddress')} />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <TextInput label="From Name" {...form.getInputProps('communications.smtp.fromName')} />
-            </Grid.Col>
-            <Grid.Col span={12}>
-              <Switch label="Use STARTTLS (recommended for port 587)"
-                      checked={!!smtp.useStartTls}
-                      onChange={(e) => form.setFieldValue('communications.smtp.useStartTls', e.currentTarget.checked)} />
-            </Grid.Col>
-          </Grid>
-          <Text size="sm" c="dimmed">Admin Notify Email — contact form messages are delivered here.</Text>
-          <TextInput label="Admin Notify Email"
-                     {...form.getInputProps('communications.adminNotifyEmail')} />
+    <>
+      <p className="fp-panel-title">SMTP</p>
+      <Switch label="SMTP açık" {...form.bindCheck('communications.smtp.enabled')} />
+      <p className="fp-hint">Kapalıyken iletişim formu mesajı yine kaydeder, sadece e-posta göndermez.</p>
 
-          <Group align="end">
-            <TextInput
-              label="Test mail — recipient"
-              value={testTo}
-              onChange={(e) => setTestTo(e.currentTarget.value)}
-              placeholder="example@gmail.com"
-              style={{ flex: 1 }}
-            />
-            <Button
-              leftSection={<IconMailForward size={16} />}
-              onClick={() => testMut.mutate(testTo)}
-              loading={testMut.isPending}
-              disabled={!testTo}
-              variant="light"
-            >
-              Send test
-            </Button>
-          </Group>
-          <Text size="xs" c="dimmed">
-            Note: the test mail uses the saved (DB) SMTP config, not your unsaved form edits.
-            Save first if you changed the password or host.
-          </Text>
-        </Stack>
-      </Paper>
+      <div className="fp-grid">
+        <Field label="Sunucu" error={form.error('communications.smtp.host')}>
+          <Input mono disabled={!smtpOn} placeholder="smtp.example.com" {...form.bind('communications.smtp.host')} />
+        </Field>
+        <Field label="Port" error={form.error('communications.smtp.port')}>
+          <Input type="number" disabled={!smtpOn} {...form.bind('communications.smtp.port', { number: true })} />
+        </Field>
+        <Field label="Kullanıcı" error={form.error('communications.smtp.username')}>
+          <Input disabled={!smtpOn} autoComplete="off" {...form.bind('communications.smtp.username')} />
+        </Field>
+        <Field label="Parola" hint="Kayıtlıysa boş bırakırsan değişmez." error={form.error('communications.smtp.password')}>
+          <Input type="password" disabled={!smtpOn} autoComplete="new-password" {...form.bind('communications.smtp.password')} />
+        </Field>
+        <Field label="Gönderen adresi" error={form.error('communications.smtp.fromAddress')}>
+          <Input type="email" disabled={!smtpOn} {...form.bind('communications.smtp.fromAddress')} />
+        </Field>
+        <Field label="Gönderen adı" error={form.error('communications.smtp.fromName')}>
+          <Input disabled={!smtpOn} {...form.bind('communications.smtp.fromName')} />
+        </Field>
+      </div>
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Title order={4}>Auto-reply</Title>
-          <Switch
-            label="Send an auto-reply to senders"
-            checked={!!autoReply.enabled}
-            onChange={(e) => form.setFieldValue('communications.autoReply.enabled', e.currentTarget.checked)}
-          />
-          <Text size="xs" c="dimmed">{'{name}'} placeholder is available.</Text>
-          <Tabs defaultValue="tr" variant="pills">
-            <Tabs.List><Tabs.Tab value="tr">TR</Tabs.Tab><Tabs.Tab value="en">EN</Tabs.Tab></Tabs.List>
-            <Tabs.Panel value="tr" pt="md">
-              <Stack gap="xs">
-                <TextInput label="Subject (TR)"
-                           {...form.getInputProps('communications.autoReply.subject_tr')} />
-                <Textarea label="Body (TR)" minRows={5} autosize
-                          {...form.getInputProps('communications.autoReply.body_tr')} />
-              </Stack>
-            </Tabs.Panel>
-            <Tabs.Panel value="en" pt="md">
-              <Stack gap="xs">
-                <TextInput label="Subject (EN)"
-                           {...form.getInputProps('communications.autoReply.subject_en')} />
-                <Textarea label="Body (EN)" minRows={5} autosize
-                          {...form.getInputProps('communications.autoReply.body_en')} />
-              </Stack>
-            </Tabs.Panel>
-          </Tabs>
-        </Stack>
-      </Paper>
-    </Stack>
+      <div className="fp-switches">
+        <Switch label="STARTTLS kullan" disabled={!smtpOn} {...form.bindCheck('communications.smtp.useStartTls')} />
+      </div>
+
+      <Field label="Bildirim adresi" hint="Yeni mesaj geldiğinde buraya haber verilir.">
+        <Input type="email" {...form.bind('communications.adminNotifyEmail')} />
+      </Field>
+
+      {onTestSmtp && (
+        <div className="fp-btns">
+          <button type="button" className="fp-btn" onClick={onTestSmtp} disabled={!smtpOn || testing}>
+            {testing ? '…' : 'Test e-postası gönder'}
+          </button>
+        </div>
+      )}
+
+      <hr className="fp-rule" />
+
+      <p className="fp-panel-title">Otomatik yanıt</p>
+      <Switch label="Otomatik yanıt açık" {...form.bindCheck('communications.autoReply.enabled')} />
+      <p className="fp-hint">Formu dolduran kişiye gönderilen teşekkür e-postası.</p>
+
+      <LangTabs>
+        {(lang) => (
+          <>
+            <Field label="Konu">
+              <Input disabled={!replyOn} {...form.bind(`communications.autoReply.subject_${lang}`)} />
+            </Field>
+            <Field label="Gövde">
+              <Textarea rows={6} disabled={!replyOn} {...form.bind(`communications.autoReply.body_${lang}`)} />
+            </Field>
+          </>
+        )}
+      </LangTabs>
+    </>
   );
 }

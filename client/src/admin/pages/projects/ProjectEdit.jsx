@@ -1,76 +1,72 @@
-import {
-  ActionIcon,
-  Button,
-  ColorInput,
-  Divider,
-  Grid,
-  Group,
-  NumberInput,
-  Paper,
-  Select,
-  Stack,
-  Switch,
-  Tabs,
-  Textarea,
-  TextInput,
-  Title,
-  Text,
-  TagsInput,
-  LoadingOverlay,
-} from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
-import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconDeviceFloppy, IconPlus, IconTrash } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 import { adminApi } from '../../../api/adminApi';
+import {
+  Button, Field, Input, PageHead, RichEditor, Select, Switch, TagsInput, Textarea,
+} from '../../ui';
+import { useToast } from '../../ui/hooks';
+import { useForm } from '../../ui/useForm';
+import { isEmptyDoc, toDoc, withHighlights } from '../../../utils/richDocModel';
 
 const localeSchema = z.object({
-  title: z.string().min(1, 'Required').max(200),
-  shortDesc: z.string().min(1, 'Required').max(500),
-  longDesc: z.string().min(1, 'Required'),
-  status: z.string().min(1, 'Required').max(64),
+  title: z.string().min(1, 'Zorunlu').max(200),
+  shortDesc: z.string().min(1, 'Zorunlu').max(500),
+  longDesc: z.unknown().refine((v) => !isEmptyDoc(toDoc(v)), { message: 'Zorunlu' }),
+  status: z.string().min(1, 'Zorunlu').max(64),
   client: z.string().max(200).nullish(),
-  highlights: z.array(z.string().max(400)),
 });
 
 const schema = z.object({
-  slug: z.string().min(1).max(128).regex(/^[a-z0-9-]+$/, 'Lowercase kebab-case only'),
+  slug: z.string().min(1, 'Zorunlu').max(128).regex(/^[a-z0-9-]+$/, 'Yalnızca küçük harf ve tire'),
   sortOrder: z.number().int().min(0),
   isPublished: z.boolean(),
-  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/, 'Valid hex color (#xxxxxx)'),
-  typeKey: z.string().min(1).max(64),
-  github: z.string().url().nullable().or(z.literal('')),
-  live: z.string().url().nullable().or(z.literal('')),
+  color: z.string().regex(/^#[0-9a-fA-F]{3,8}$/, 'Geçerli hex renk (#xxxxxx)'),
+  typeKey: z.string().min(1, 'Zorunlu').max(64),
+  github: z.string().url('Geçerli URL').nullable().or(z.literal('')),
+  live: z.string().url('Geçerli URL').nullable().or(z.literal('')),
   tags: z.array(z.string().max(64)),
   dataTr: localeSchema,
   dataEn: localeSchema,
 });
 
-const TYPE_OPTIONS = ['Backend', 'Full-Stack', 'Frontend', 'Microservices', 'Enterprise', 'Other'];
+const TYPES = ['Backend', 'Full-Stack', 'Frontend', 'Microservices', 'Enterprise', 'Other']
+  .map((v) => ({ value: v, label: v }));
 
-function emptyProject() {
-  return {
-    slug: '',
-    sortOrder: 0,
-    isPublished: false,
-    color: '#7c6fff',
-    typeKey: 'Backend',
-    github: '',
-    live: '',
-    tags: [],
-    dataTr: { title: '', shortDesc: '', longDesc: '', status: 'Tamamlandı', client: '', highlights: [] },
-    dataEn: { title: '', shortDesc: '', longDesc: '', status: 'Completed', client: '', highlights: [] },
-  };
-}
+const empty = () => ({
+  slug: '',
+  sortOrder: 0,
+  isPublished: false,
+  color: '#7c6fff',
+  typeKey: 'Backend',
+  github: '',
+  live: '',
+  tags: [],
+  dataTr: { title: '', shortDesc: '', longDesc: toDoc(''), status: 'Tamamlandı', client: '' },
+  dataEn: { title: '', shortDesc: '', longDesc: toDoc(''), status: 'Completed', client: '' },
+});
+
+/**
+ * Legacy rows keep a plain-text description and a separate highlights array.
+ * Both are folded into one document on load, so nothing is lost — the record
+ * simply saves in the new shape the next time it is written.
+ */
+const localeToDoc = (locale, fallback) => ({
+  ...fallback,
+  ...locale,
+  client: locale?.client ?? '',
+  longDesc: withHighlights(toDoc(locale?.longDesc), locale?.highlights),
+  highlights: undefined,
+});
 
 export default function ProjectEdit() {
   const { id } = useParams();
   const isNew = id === 'new';
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const toast = useToast();
+  const [tab, setTab] = useState('tr');
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'projects', id],
@@ -78,29 +74,24 @@ export default function ProjectEdit() {
     enabled: !isNew,
   });
 
-  const form = useForm({
-    mode: 'uncontrolled',
-    initialValues: emptyProject(),
-    validate: zodResolver(schema),
-  });
+  const form = useForm({ initial: empty(), schema });
+  const { reset } = form;
 
   useEffect(() => {
-    if (data) {
-      form.setValues({
-        slug: data.slug,
-        sortOrder: data.sortOrder,
-        isPublished: data.isPublished,
-        color: data.color,
-        typeKey: data.typeKey,
-        github: data.github ?? '',
-        live: data.live ?? '',
-        tags: data.tags ?? [],
-        dataTr: { ...data.dataTr, client: data.dataTr.client ?? '' },
-        dataEn: { ...data.dataEn, client: data.dataEn.client ?? '' },
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+    if (!data) return;
+    reset({
+      slug: data.slug,
+      sortOrder: data.sortOrder ?? 0,
+      isPublished: !!data.isPublished,
+      color: data.color ?? '#7c6fff',
+      typeKey: data.typeKey ?? 'Backend',
+      github: data.github ?? '',
+      live: data.live ?? '',
+      tags: data.tags ?? [],
+      dataTr: localeToDoc(data.dataTr, empty().dataTr),
+      dataEn: localeToDoc(data.dataEn, empty().dataEn),
+    });
+  }, [data, reset]);
 
   const saveMut = useMutation({
     mutationFn: (values) => {
@@ -116,187 +107,127 @@ export default function ProjectEdit() {
     onSuccess: (saved) => {
       qc.invalidateQueries({ queryKey: ['admin', 'projects'] });
       qc.invalidateQueries({ queryKey: ['public', 'projects'] });
-      notifications.show({ message: 'Saved', color: 'green' });
+      toast('Kaydedildi.', 'ok');
       if (isNew && saved?.id) navigate(`/admin/projects/${saved.id}`, { replace: true });
     },
-    onError: (e) => {
-      notifications.show({
-        title: 'Save failed',
-        message: e?.data?.errors ? JSON.stringify(e.data.errors) : e.message,
-        color: 'red',
-      });
-    },
+    onError: (e) => toast(e?.data?.title ?? e?.message ?? 'Kaydedilemedi.', 'err'),
   });
 
-  const onSubmit = form.onSubmit((values) => saveMut.mutate(values));
+  const submit = (e) => {
+    e?.preventDefault?.();
+    const result = form.validate();
+    if (!result.ok) {
+      toast('Eksik ya da hatalı alanlar var.', 'err');
+      return;
+    }
+    saveMut.mutate(result.data);
+  };
+
+  if (isLoading) return <p className="fp-loading">Proje okunuyor…</p>;
 
   return (
-    <Stack gap="lg" pos="relative">
-      <LoadingOverlay visible={isLoading} />
-
-      <Group justify="space-between">
-        <Group gap="xs">
-          <ActionIcon variant="subtle" onClick={() => navigate('/admin/projects')}>
-            <IconArrowLeft size={18} />
-          </ActionIcon>
-          <Title order={2}>{isNew ? 'New project' : 'Edit project'}</Title>
-        </Group>
-        <Button
-          onClick={onSubmit}
-          loading={saveMut.isPending}
-          leftSection={<IconDeviceFloppy size={16} />}
-        >
-          {isNew ? 'Create' : 'Save'}
+    <form onSubmit={submit}>
+      <PageHead eyebrow="İçerik · Proje" title={isNew ? 'Yeni proje' : form.value('dataTr.title') || 'Proje'}>
+        <Button onClick={() => navigate('/admin/projects')}>Listeye dön</Button>
+        <Button variant="primary" busy={saveMut.isPending} onClick={submit}>
+          {isNew ? 'Oluştur' : 'Kaydet'}
         </Button>
-      </Group>
+      </PageHead>
 
-      <form onSubmit={onSubmit}>
-        <Grid>
-          {/* Meta card */}
-          <Grid.Col span={{ base: 12, md: 8 }}>
-            <Paper withBorder p="lg" radius="md">
-              <Stack gap="md">
-                <Title order={4}>Meta</Title>
-                <Grid>
-                  <Grid.Col span={6}>
-                    <TextInput label="Slug" placeholder="my-project" required {...form.getInputProps('slug')} />
-                  </Grid.Col>
-                  <Grid.Col span={3}>
-                    <NumberInput label="Sort order" min={0} {...form.getInputProps('sortOrder')} />
-                  </Grid.Col>
-                  <Grid.Col span={3}>
-                    <Stack gap={4} mt="lg">
-                      <Switch
-                        label="Published"
-                        {...form.getInputProps('isPublished', { type: 'checkbox' })}
-                      />
-                    </Stack>
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Select
-                      label="Type"
-                      data={TYPE_OPTIONS}
-                      searchable
-                      {...form.getInputProps('typeKey')}
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <ColorInput label="Color" format="hex" {...form.getInputProps('color')} />
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <TextInput label="GitHub URL" placeholder="https://github.com/..." {...form.getInputProps('github')} />
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <TextInput label="Live URL" placeholder="https://..." {...form.getInputProps('live')} />
-                  </Grid.Col>
-                  <Grid.Col span={12}>
-                    <TagsInput
-                      label="Tags (language-neutral)"
-                      placeholder="Type and press Enter"
-                      {...form.getInputProps('tags')}
-                    />
-                  </Grid.Col>
-                </Grid>
-              </Stack>
-            </Paper>
-          </Grid.Col>
+      <div className="fp-form">
+        <section className="fp-panel fp-section">
+          <p className="fp-panel-title">Künye</p>
 
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <Paper withBorder p="lg" radius="md">
-              <Stack gap="xs">
-                <Title order={5}>Preview</Title>
-                <Text size="sm" c="dimmed">Slug</Text>
-                <Text ff="monospace">{form.getValues().slug || '—'}</Text>
-                <Divider />
-                <Text size="sm" c="dimmed">Color</Text>
-                <Group gap="xs">
-                  <div style={{ width: 20, height: 20, borderRadius: 4, background: form.getValues().color }} />
-                  <Text ff="monospace" size="sm">{form.getValues().color}</Text>
-                </Group>
-              </Stack>
-            </Paper>
-          </Grid.Col>
+          <div className="fp-grid">
+            <Field label="Slug" required htmlFor="slug" error={form.error('slug')}>
+              <Input id="slug" mono placeholder="proje-adi" {...form.bind('slug')} />
+            </Field>
 
-          {/* Bilingual content */}
-          <Grid.Col span={12}>
-            <Paper withBorder p="lg" radius="md">
-              <Tabs defaultValue="tr" variant="outline">
-                <Tabs.List>
-                  <Tabs.Tab value="tr">TR</Tabs.Tab>
-                  <Tabs.Tab value="en">EN</Tabs.Tab>
-                </Tabs.List>
-                <Tabs.Panel value="tr" pt="lg">
-                  <LocaleFields form={form} prefix="dataTr" />
-                </Tabs.Panel>
-                <Tabs.Panel value="en" pt="lg">
-                  <LocaleFields form={form} prefix="dataEn" />
-                </Tabs.Panel>
-              </Tabs>
-            </Paper>
-          </Grid.Col>
-        </Grid>
-      </form>
-    </Stack>
+            <Field label="Sıra" htmlFor="sortOrder" error={form.error('sortOrder')}>
+              <Input id="sortOrder" type="number" min="0" {...form.bind('sortOrder', { number: true })} />
+            </Field>
+
+            <Field label="Tür" htmlFor="typeKey" error={form.error('typeKey')}>
+              <Select id="typeKey" options={TYPES} {...form.bind('typeKey')} />
+            </Field>
+
+            <Field label="Renk" htmlFor="color" error={form.error('color')}>
+              <div className="fp-inline">
+                <input
+                  className="fp-color"
+                  type="color"
+                  value={form.value('color')}
+                  onChange={(e) => form.set('color', e.target.value)}
+                  aria-label="Renk seç"
+                />
+                <Input id="color" mono {...form.bind('color')} />
+              </div>
+            </Field>
+
+            <Field label="GitHub" htmlFor="github" error={form.error('github')}>
+              <Input id="github" placeholder="https://github.com/…" {...form.bind('github')} />
+            </Field>
+
+            <Field label="Canlı adres" htmlFor="live" error={form.error('live')}>
+              <Input id="live" placeholder="https://…" {...form.bind('live')} />
+            </Field>
+          </div>
+
+          <Field
+            label="Etiketler"
+            hint="Bağımlılık şemasındaki düğümler bunlardan üretiliyor — dilden bağımsız yaz."
+            error={form.error('tags')}
+          >
+            <TagsInput value={form.value('tags')} onChange={(v) => form.set('tags', v)} />
+          </Field>
+
+          <Switch label="Yayında" {...form.bindCheck('isPublished')} />
+        </section>
+
+        <section className="fp-panel fp-section">
+          <div className="fp-tabs">
+            <button type="button" className={tab === 'tr' ? 'fp-tab fp-tab-on' : 'fp-tab'} onClick={() => setTab('tr')}>Türkçe</button>
+            <button type="button" className={tab === 'en' ? 'fp-tab fp-tab-on' : 'fp-tab'} onClick={() => setTab('en')}>English</button>
+          </div>
+
+          <LocaleFields form={form} prefix={tab === 'tr' ? 'dataTr' : 'dataEn'} />
+        </section>
+      </div>
+    </form>
   );
 }
 
 function LocaleFields({ form, prefix }) {
-  const values = form.getValues()[prefix] || { highlights: [] };
-  const addHighlight = () => {
-    form.setFieldValue(`${prefix}.highlights`, [...(values.highlights || []), '']);
-  };
-  const removeHighlight = (idx) => {
-    const next = [...(values.highlights || [])];
-    next.splice(idx, 1);
-    form.setFieldValue(`${prefix}.highlights`, next);
-  };
-
   return (
-    <Stack gap="md">
-      <Grid>
-        <Grid.Col span={12}>
-          <TextInput label="Title" required {...form.getInputProps(`${prefix}.title`)} />
-        </Grid.Col>
-        <Grid.Col span={12}>
-          <Textarea label="Short description" rows={2} required {...form.getInputProps(`${prefix}.shortDesc`)} />
-        </Grid.Col>
-        <Grid.Col span={12}>
-          <Textarea label="Long description" rows={5} required {...form.getInputProps(`${prefix}.longDesc`)} />
-        </Grid.Col>
-        <Grid.Col span={6}>
-          <TextInput label="Status" required {...form.getInputProps(`${prefix}.status`)} />
-        </Grid.Col>
-        <Grid.Col span={6}>
-          <TextInput label="Client (optional)" {...form.getInputProps(`${prefix}.client`)} />
-        </Grid.Col>
-      </Grid>
+    <>
+      <Field label="Başlık" required error={form.error(`${prefix}.title`)}>
+        <Input {...form.bind(`${prefix}.title`)} />
+      </Field>
 
-      <Stack gap="xs">
-        <Group justify="space-between">
-          <Text fw={500}>Highlights</Text>
-          <Button size="xs" variant="light" leftSection={<IconPlus size={14} />} onClick={addHighlight}>
-            Add
-          </Button>
-        </Group>
-        {(values.highlights || []).length === 0 ? (
-          <Text c="dimmed" size="sm">No highlights yet.</Text>
-        ) : (
-          <Stack gap="xs">
-            {(values.highlights || []).map((_, idx) => (
-              <Group key={idx} gap="xs" wrap="nowrap">
-                <TextInput
-                  style={{ flex: 1 }}
-                  placeholder={`Highlight #${idx + 1}`}
-                  {...form.getInputProps(`${prefix}.highlights.${idx}`)}
-                />
-                <ActionIcon color="red" variant="subtle" onClick={() => removeHighlight(idx)}>
-                  <IconTrash size={16} />
-                </ActionIcon>
-              </Group>
-            ))}
-          </Stack>
-        )}
-      </Stack>
-    </Stack>
+      <Field label="Kısa açıklama" required error={form.error(`${prefix}.shortDesc`)}>
+        <Textarea rows={2} {...form.bind(`${prefix}.shortDesc`)} />
+      </Field>
+
+      <Field
+        label="Açıklama"
+        required
+        hint="Başlık, madde listesi, kalın, italik, kod ve bağlantı kullanabilirsin."
+        error={form.error(`${prefix}.longDesc`)}
+      >
+        <RichEditor
+          value={form.value(`${prefix}.longDesc`)}
+          onChange={(doc) => form.set(`${prefix}.longDesc`, doc)}
+        />
+      </Field>
+
+      <div className="fp-grid">
+        <Field label="Durum" required error={form.error(`${prefix}.status`)}>
+          <Input {...form.bind(`${prefix}.status`)} />
+        </Field>
+        <Field label="Müşteri" hint="İsteğe bağlı" error={form.error(`${prefix}.client`)}>
+          <Input {...form.bind(`${prefix}.client`)} />
+        </Field>
+      </div>
+    </>
   );
 }

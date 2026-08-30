@@ -1,94 +1,75 @@
-import { Alert, Grid, Group, Paper, Stack, Switch, Tabs, Textarea, TextInput, Title } from '@mantine/core';
-import { IconAlertTriangle } from '@tabler/icons-react';
+import { Field, Input, Switch, Textarea } from '../../../ui';
+import LangTabs from './LangTabs';
 
-const SECTION_LABELS = {
-  hero: 'Hero',
-  about: 'About',
-  skills: 'Skills',
-  projects: 'Projects',
-  experience: 'Experience',
-  blog: 'Blog',
-  contact: 'Contact',
-};
+/**
+ * Sheet keys, not the old site's section keys. A missing key counts as
+ * visible, so an existing settings row hides nothing on its own.
+ *
+ * The cover is not listed: it is how the set is entered, and a site whose
+ * front page can be switched off is not a state worth supporting.
+ */
+const SHEETS = [
+  { key: 'about', label: '02 Künye' },
+  { key: 'projects', label: '03 Projeler' },
+  { key: 'experience', label: '04 Geçmiş' },
+  { key: 'skills', label: '05 Yetkinlik' },
+  { key: 'blog', label: '06 Notlar' },
+  { key: 'contact', label: '07 İletişim' },
+];
 
 export default function OperationsTab({ form }) {
-  const v = form.getValues();
-  const ops = v.operations ?? {};
-  const analyticsOn = !!ops.analytics?.enabled;
+  const maintenance = !!form.value('operations.maintenanceMode');
+  const analytics = !!form.value('operations.analytics.enabled');
+  const enabled = form.value('operations.sectionsEnabled') ?? {};
 
   return (
-    <Stack gap="xl">
-      {/* Maintenance */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Title order={4}>Maintenance Mode</Title>
-          <Switch
-            label="Enable maintenance mode"
-            checked={!!ops.maintenanceMode}
-            onChange={(e) => form.setFieldValue('operations.maintenanceMode', e.currentTarget.checked)}
-          />
-          {ops.maintenanceMode && (
-            <Alert icon={<IconAlertTriangle size={16} />} color="yellow" variant="light">
-              The public site will be replaced with a maintenance page. The admin panel stays accessible.
-            </Alert>
-          )}
-          <Tabs defaultValue="tr" variant="pills">
-            <Tabs.List><Tabs.Tab value="tr">TR</Tabs.Tab><Tabs.Tab value="en">EN</Tabs.Tab></Tabs.List>
-            <Tabs.Panel value="tr" pt="md">
-              <Textarea label="Maintenance message (TR)" minRows={4} autosize
-                        {...form.getInputProps('operations.maintenanceMessage_tr')} />
-            </Tabs.Panel>
-            <Tabs.Panel value="en" pt="md">
-              <Textarea label="Maintenance message (EN)" minRows={4} autosize
-                        {...form.getInputProps('operations.maintenanceMessage_en')} />
-            </Tabs.Panel>
-          </Tabs>
-        </Stack>
-      </Paper>
+    <>
+      <p className="fp-panel-title">Bakım modu</p>
+      <Switch label="Bakım modunu aç" {...form.bindCheck('operations.maintenanceMode')} />
 
-      {/* Sections visible */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Title order={4}>Sections Visible</Title>
-          <Grid>
-            {Object.entries(SECTION_LABELS).map(([key, label]) => (
-              <Grid.Col span={{ base: 6, sm: 4 }} key={key}>
-                <Switch
-                  label={label}
-                  checked={!!ops.sectionsEnabled?.[key]}
-                  onChange={(e) => form.setFieldValue(`operations.sectionsEnabled.${key}`, e.currentTarget.checked)}
-                />
-              </Grid.Col>
-            ))}
-          </Grid>
-        </Stack>
-      </Paper>
+      {maintenance && (
+        <p className="fp-warn">
+          Public site bakım sayfasıyla değişir. Admin paneli erişilebilir kalır.
+        </p>
+      )}
 
-      {/* Analytics */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Title order={4}>Analytics</Title>
+      <LangTabs>
+        {(lang) => (
+          <Field label={lang === 'tr' ? 'Bakım mesajı (TR)' : 'Bakım mesajı (EN)'}>
+            <Textarea rows={4} {...form.bind(`operations.maintenanceMessage_${lang}`)} />
+          </Field>
+        )}
+      </LangTabs>
+
+      <hr className="fp-rule" />
+
+      <p className="fp-panel-title">Görünen paftalar</p>
+      <p className="fp-hint">Kapatılan pafta public sitede hiç render edilmez; admin'den erişimin sürer.</p>
+
+      <div className="fp-switch-grid">
+        {SHEETS.map((s) => (
           <Switch
-            label="Analytics enabled"
-            checked={analyticsOn}
-            onChange={(e) => form.setFieldValue('operations.analytics.enabled', e.currentTarget.checked)}
+            key={s.key}
+            label={s.label}
+            checked={enabled[s.key] !== false}
+            onChange={(e) => form.set(`operations.sectionsEnabled.${s.key}`, e.target.checked)}
           />
-          <Group grow>
-            <TextInput
-              label="GA4 Measurement ID"
-              placeholder="G-XXXXXXXXXX"
-              disabled={!analyticsOn}
-              {...form.getInputProps('operations.analytics.ga4MeasurementId')}
-            />
-            <TextInput
-              label="GTM Container ID"
-              placeholder="GTM-XXXXXX"
-              disabled={!analyticsOn}
-              {...form.getInputProps('operations.analytics.gtmContainerId')}
-            />
-          </Group>
-        </Stack>
-      </Paper>
-    </Stack>
+        ))}
+      </div>
+
+      <hr className="fp-rule" />
+
+      <p className="fp-panel-title">Analitik</p>
+      <Switch label="Analitik açık" {...form.bindCheck('operations.analytics.enabled')} />
+
+      <div className="fp-grid">
+        <Field label="GA4 ölçüm kimliği">
+          <Input mono placeholder="G-XXXXXXXXXX" disabled={!analytics} {...form.bind('operations.analytics.ga4MeasurementId')} />
+        </Field>
+        <Field label="GTM konteyner kimliği">
+          <Input mono placeholder="GTM-XXXXXX" disabled={!analytics} {...form.bind('operations.analytics.gtmContainerId')} />
+        </Field>
+      </div>
+    </>
   );
 }

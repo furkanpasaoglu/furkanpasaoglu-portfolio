@@ -1,42 +1,66 @@
-import { Grid, Stack, Tabs, TagsInput, Textarea, TextInput } from '@mantine/core';
-
-function LocaleSchemaFields({ form, lang }) {
-  return (
-    <Grid>
-      <Grid.Col span={12}><TextInput label="Job Title" required {...form.getInputProps(`schema.jobTitle_${lang}`)} /></Grid.Col>
-      <Grid.Col span={12}><Textarea label="Person Description" required minRows={3} autosize {...form.getInputProps(`schema.personDescription_${lang}`)} /></Grid.Col>
-      <Grid.Col span={12}><TextInput label="Address Locality" required {...form.getInputProps(`schema.addressLocality_${lang}`)} /></Grid.Col>
-      <Grid.Col span={12}>
-        <TagsInput label="Knows About"
-                   value={form.getValues().schema?.[`knowsAbout_${lang}`] ?? []}
-                   onChange={(v) => form.setFieldValue(`schema.knowsAbout_${lang}`, v)} />
-      </Grid.Col>
-      <Grid.Col span={12}><TextInput label="Works For (Organization Name)" required {...form.getInputProps(`schema.worksForName_${lang}`)} /></Grid.Col>
-      <Grid.Col span={12}><TextInput label="Alumni Of (Organization Name)" required {...form.getInputProps(`schema.alumniOfName_${lang}`)} /></Grid.Col>
-    </Grid>
-  );
-}
+import { Field, Input, TagsInput, Textarea } from '../../../ui';
+import LangTabs from './LangTabs';
 
 export default function SchemaTab({ form }) {
   return (
-    <Stack gap="lg">
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 6 }}><TextInput label="First Name" required {...form.getInputProps('schema.firstName')} /></Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}><TextInput label="Last Name" required {...form.getInputProps('schema.lastName')} /></Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}><TextInput label="Email" required type="email" {...form.getInputProps('schema.email')} /></Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}><TextInput label="Country Code (ISO)" required {...form.getInputProps('schema.addressCountry')} /></Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}><TextInput label="Date Created (YYYY-MM-DD)" required {...form.getInputProps('schema.dateCreated')} /></Grid.Col>
-        <Grid.Col span={12}>
-          <TagsInput label="sameAs (social URLs)"
-                     value={form.getValues().schema?.sameAs ?? []}
-                     onChange={(v) => form.setFieldValue('schema.sameAs', v)} />
-        </Grid.Col>
-      </Grid>
-      <Tabs defaultValue="tr" variant="pills">
-        <Tabs.List><Tabs.Tab value="tr">TR</Tabs.Tab><Tabs.Tab value="en">EN</Tabs.Tab></Tabs.List>
-        <Tabs.Panel value="tr" pt="md"><LocaleSchemaFields form={form} lang="tr" /></Tabs.Panel>
-        <Tabs.Panel value="en" pt="md"><LocaleSchemaFields form={form} lang="en" /></Tabs.Panel>
-      </Tabs>
-    </Stack>
+    <>
+      <div className="fp-grid">
+        <Field label="Ad" required error={form.error('schema.firstName')}>
+          <Input {...form.bind('schema.firstName')} />
+        </Field>
+        <Field label="Soyad" required error={form.error('schema.lastName')}>
+          <Input {...form.bind('schema.lastName')} />
+        </Field>
+        <Field label="E-posta" required error={form.error('schema.email')}>
+          <Input type="email" {...form.bind('schema.email')} />
+        </Field>
+        <Field label="Ülke kodu" required hint="ISO, örn. TR" error={form.error('schema.addressCountry')}>
+          <Input mono {...form.bind('schema.addressCountry')} />
+        </Field>
+        <Field label="Oluşturulma tarihi" required hint="YYYY-AA-GG" error={form.error('schema.dateCreated')}>
+          <Input mono {...form.bind('schema.dateCreated')} />
+        </Field>
+      </div>
+
+      <Field label="sameAs" hint="Sosyal profil adresleri — JSON-LD'ye bu şekilde giriyor.">
+        <TagsInput
+          value={form.value('schema.sameAs') ?? []}
+          onChange={(v) => form.set('schema.sameAs', v)}
+          placeholder="https://…"
+        />
+      </Field>
+
+      <hr className="fp-rule" />
+
+      <LangTabs>
+        {(lang) => (
+          <>
+            <Field label="Ünvan" required error={form.error(`schema.jobTitle_${lang}`)}>
+              <Input {...form.bind(`schema.jobTitle_${lang}`)} />
+            </Field>
+            <Field label="Kişi açıklaması" required error={form.error(`schema.personDescription_${lang}`)}>
+              <Textarea rows={4} {...form.bind(`schema.personDescription_${lang}`)} />
+            </Field>
+            <Field label="Şehir" required error={form.error(`schema.addressLocality_${lang}`)}>
+              <Input {...form.bind(`schema.addressLocality_${lang}`)} />
+            </Field>
+            <Field label="Uzmanlık alanları">
+              <TagsInput
+                value={form.value(`schema.knowsAbout_${lang}`) ?? []}
+                onChange={(v) => form.set(`schema.knowsAbout_${lang}`, v)}
+              />
+            </Field>
+            <div className="fp-grid">
+              <Field label="Çalıştığı kurum" required error={form.error(`schema.worksForName_${lang}`)}>
+                <Input {...form.bind(`schema.worksForName_${lang}`)} />
+              </Field>
+              <Field label="Mezun olduğu kurum" required error={form.error(`schema.alumniOfName_${lang}`)}>
+                <Input {...form.bind(`schema.alumniOfName_${lang}`)} />
+              </Field>
+            </div>
+          </>
+        )}
+      </LangTabs>
+    </>
   );
 }

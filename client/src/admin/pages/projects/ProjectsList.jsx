@@ -1,40 +1,39 @@
-import { Badge, ColorSwatch, Group, Stack, Text } from '@mantine/core';
 import { adminApi } from '../../../api/adminApi';
 import AdminDataTable, { StatusBadge } from '../../components/AdminDataTable';
+import { Bilingual, Swatch, When } from '../../components/cells';
 
 const columns = [
-  { header: 'Slug', render: (r) => (
-    <Group gap="xs" wrap="nowrap">
-      <ColorSwatch color={r.color} size={14} />
-      <Text size="sm" ff="monospace">{r.slug}</Text>
-    </Group>
-  ) },
-  { header: 'Title', render: (r) => (
-    <Stack gap={2}>
-      <Text size="sm" fw={500} truncate>{r.titleEn}</Text>
-      <Text size="xs" c="dimmed" truncate>{r.titleTr}</Text>
-    </Stack>
-  ) },
-  { header: 'Type', render: (r) => <Badge variant="light" size="sm">{r.typeKey}</Badge> },
-  { header: 'Status', render: (r) => <StatusBadge published={r.isPublished} /> },
-  { header: 'Updated', render: (r) => <Text size="xs" c="dimmed">{new Date(r.updatedAt).toLocaleDateString()}</Text> },
+  {
+    header: 'Slug',
+    render: (r) => (
+      <span className="fp-inline">
+        <Swatch color={r.color} />
+        <span className="fp-mono">{r.slug}</span>
+      </span>
+    ),
+  },
+  { header: 'Başlık', render: (r) => <Bilingual en={r.titleEn} tr={r.titleTr} /> },
+  { header: 'Tür', render: (r) => <span className="fp-chip">{r.typeKey}</span> },
+  { header: 'Durum', render: (r) => <StatusBadge published={r.isPublished} /> },
+  { header: 'Güncelleme', render: (r) => <When value={r.updatedAt} /> },
 ];
 
 export default function ProjectsList() {
   return (
     <AdminDataTable
-      title="Projects"
-      newButton={{ to: '/admin/projects/new', label: 'New project' }}
+      eyebrow="İçerik"
+      title="Projeler"
+      newButton={{ to: '/admin/projects/new', label: 'Yeni proje' }}
       listKey={['admin', 'projects']}
       publicKey={['public', 'projects']}
       queryFn={() => adminApi.listProjects()}
       publishFn={(id) => adminApi.publishProject(id)}
       deleteFn={(id) => adminApi.deleteProject(id)}
-      deleteConfirm={(r) => `Delete project "${r.titleEn}"?`}
-      deleteToast="Project deleted"
+      deleteConfirm={(r) => `"${r.titleEn || r.titleTr}" projesi kalıcı olarak silinecek.`}
+      deleteToast="Proje silindi."
       editPath={(r) => `/admin/projects/${r.id}`}
       columns={columns}
-      emptyLabel="No projects."
+      emptyLabel="Henüz proje yok."
     />
   );
 }

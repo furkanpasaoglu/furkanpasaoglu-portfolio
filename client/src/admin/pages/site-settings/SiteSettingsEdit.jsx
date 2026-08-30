@@ -1,10 +1,9 @@
-import { Button, Group, LoadingOverlay, Paper, Stack, Tabs, Title } from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { notifications } from '@mantine/notifications';
-import { IconDeviceFloppy, IconRefresh } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { adminApi } from '../../../api/adminApi';
+import { Button, PageHead } from '../../ui';
+import { useToast } from '../../ui/hooks';
+import { useForm } from '../../ui/useForm';
 import SeoTab from './tabs/SeoTab';
 import SocialTab from './tabs/SocialTab';
 import SchemaTab from './tabs/SchemaTab';
@@ -32,7 +31,7 @@ const emptyOperations = {
   maintenanceMode: false,
   maintenanceMessage_tr: '',
   maintenanceMessage_en: '',
-  sectionsEnabled: { hero: true, about: true, skills: true, projects: true, experience: true, blog: true, contact: true },
+  sectionsEnabled: {},
   analytics: { enabled: false, ga4MeasurementId: '', gtmContainerId: '' },
 };
 
@@ -41,9 +40,7 @@ const emptyCommunications = {
     enabled: false, host: '', port: 587, username: '', password: '',
     fromAddress: '', fromName: '', useStartTls: true,
   },
-  autoReply: {
-    enabled: false, subject_tr: '', subject_en: '', body_tr: '', body_en: '',
-  },
+  autoReply: { enabled: false, subject_tr: '', subject_en: '', body_tr: '', body_en: '' },
   adminNotifyEmail: '',
 };
 
@@ -71,116 +68,132 @@ const emptySchema = {
   alumniOfName_tr: '', alumniOfName_en: '',
 };
 
+const initial = () => ({
+  dataTr: { ...emptyLocale, ogLocale: 'tr_TR' },
+  dataEn: { ...emptyLocale },
+  branding: { ...emptyBranding },
+  schema: { ...emptySchema },
+  operations: { ...emptyOperations, sectionsEnabled: {}, analytics: { ...emptyOperations.analytics } },
+  security: { ...emptySecurity, csp: { ...emptySecurity.csp }, robotsExtraDirectives: [] },
+  communications: {
+    ...emptyCommunications,
+    smtp: { ...emptyCommunications.smtp },
+    autoReply: { ...emptyCommunications.autoReply },
+  },
+});
+
+const TABS = [
+  { key: 'seo', label: 'SEO', Component: SeoTab },
+  { key: 'social', label: 'Sosyal', Component: SocialTab },
+  { key: 'schema', label: 'Schema', Component: SchemaTab },
+  { key: 'branding', label: 'Marka', Component: BrandingTab },
+  { key: 'operations', label: 'İşletim', Component: OperationsTab },
+  { key: 'security', label: 'Güvenlik', Component: SecurityTab },
+  { key: 'communications', label: 'İletişim', Component: CommunicationsTab },
+];
+
 export default function SiteSettingsEdit() {
   const qc = useQueryClient();
+  const toast = useToast();
+  const [tab, setTab] = useState('seo');
+
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'site-settings'],
     queryFn: () => adminApi.getSiteSettings(),
   });
 
-  const form = useForm({
-    mode: 'uncontrolled',
-    initialValues: {
-      dataTr: { ...emptyLocale, ogLocale: 'tr_TR' },
-      dataEn: { ...emptyLocale },
-      branding: { ...emptyBranding },
-      schema: { ...emptySchema },
-      operations: { ...emptyOperations, sectionsEnabled: { ...emptyOperations.sectionsEnabled }, analytics: { ...emptyOperations.analytics } },
-      security: { ...emptySecurity, csp: { ...emptySecurity.csp }, robotsExtraDirectives: [] },
-      communications: {
-        ...emptyCommunications,
-        smtp: { ...emptyCommunications.smtp },
-        autoReply: { ...emptyCommunications.autoReply },
-      },
-    },
-  });
+  const form = useForm({ initial: initial() });
+  const { reset } = form;
 
   useEffect(() => {
-    if (data) {
-      form.setValues({
-        dataTr: { ...emptyLocale, ogLocale: 'tr_TR', ...data.dataTr },
-        dataEn: { ...emptyLocale, ...data.dataEn },
-        branding: { ...emptyBranding, ...data.branding },
-        schema: { ...emptySchema, ...data.schema },
-        operations: {
-          ...emptyOperations,
-          ...data.operations,
-          sectionsEnabled: { ...emptyOperations.sectionsEnabled, ...(data.operations?.sectionsEnabled ?? {}) },
-          analytics: { ...emptyOperations.analytics, ...(data.operations?.analytics ?? {}) },
-        },
-        security: {
-          ...emptySecurity,
-          ...data.security,
-          csp: { ...emptySecurity.csp, ...(data.security?.csp ?? {}) },
-          robotsExtraDirectives: data.security?.robotsExtraDirectives ?? [],
-        },
-        communications: {
-          ...emptyCommunications,
-          ...data.communications,
-          smtp: { ...emptyCommunications.smtp, ...(data.communications?.smtp ?? {}) },
-          autoReply: { ...emptyCommunications.autoReply, ...(data.communications?.autoReply ?? {}) },
-        },
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+    if (!data) return;
+    const base = initial();
+    reset({
+      dataTr: { ...base.dataTr, ...data.dataTr },
+      dataEn: { ...base.dataEn, ...data.dataEn },
+      branding: { ...base.branding, ...data.branding },
+      schema: { ...base.schema, ...data.schema },
+      operations: {
+        ...base.operations,
+        ...data.operations,
+        sectionsEnabled: { ...(data.operations?.sectionsEnabled ?? {}) },
+        analytics: { ...base.operations.analytics, ...(data.operations?.analytics ?? {}) },
+      },
+      security: {
+        ...base.security,
+        ...data.security,
+        csp: { ...base.security.csp, ...(data.security?.csp ?? {}) },
+        robotsExtraDirectives: data.security?.robotsExtraDirectives ?? [],
+      },
+      communications: {
+        ...base.communications,
+        ...data.communications,
+        smtp: { ...base.communications.smtp, ...(data.communications?.smtp ?? {}) },
+        autoReply: { ...base.communications.autoReply, ...(data.communications?.autoReply ?? {}) },
+      },
+    });
+  }, [data, reset]);
 
   const saveMut = useMutation({
     mutationFn: (values) => adminApi.updateSiteSettings(values),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin', 'site-settings'] });
       qc.invalidateQueries({ queryKey: ['public', 'site-settings'] });
-      notifications.show({ message: 'Saved and site re-rendered', color: 'green' });
+      toast('Kaydedildi, site yeniden üretildi.', 'ok');
     },
-    onError: (e) => notifications.show({ title: 'Save failed', message: e.message, color: 'red' }),
+    onError: (e) => toast(e?.message ?? 'Kaydedilemedi.', 'err'),
   });
 
   const renderMut = useMutation({
     mutationFn: () => adminApi.manualRenderSite(),
-    onSuccess: () => notifications.show({ message: 'Rendered', color: 'green' }),
-    onError: (e) => notifications.show({ title: 'Render failed', message: e.message, color: 'red' }),
+    onSuccess: () => toast('Site yeniden üretildi.', 'ok'),
+    onError: (e) => toast(e?.message ?? 'Üretilemedi.', 'err'),
   });
 
-  const onSubmit = form.onSubmit((values) => saveMut.mutate(values));
+  const testMut = useMutation({
+    mutationFn: () => adminApi.testSmtp({ to: form.value('communications.adminNotifyEmail') }),
+    onSuccess: () => toast('Test e-postası gönderildi.', 'ok'),
+    onError: (e) => toast(e?.message ?? 'Test başarısız.', 'err'),
+  });
+
+  const submit = (e) => {
+    e?.preventDefault?.();
+    saveMut.mutate(form.values);
+  };
+
+  if (isLoading) return <p className="fp-loading">Ayarlar okunuyor…</p>;
+
+  const Active = TABS.find((t) => t.key === tab)?.Component ?? SeoTab;
 
   return (
-    <Stack gap="lg" pos="relative">
-      <LoadingOverlay visible={isLoading} />
-      <Group justify="space-between">
-        <Title order={2}>Site Settings</Title>
-        <Group>
-          <Button variant="subtle" leftSection={<IconRefresh size={16} />}
-            onClick={() => renderMut.mutate()} loading={renderMut.isPending}>
-            Manual re-render
-          </Button>
-          <Button onClick={onSubmit} loading={saveMut.isPending} leftSection={<IconDeviceFloppy size={16} />}>
-            Save
-          </Button>
-        </Group>
-      </Group>
+    <form onSubmit={submit}>
+      <PageHead eyebrow="Yapılandırma" title="Ayarlar">
+        <Button busy={renderMut.isPending} onClick={() => renderMut.mutate()}>Siteyi yeniden üret</Button>
+        <Button variant="primary" busy={saveMut.isPending} onClick={submit}>Kaydet</Button>
+      </PageHead>
 
-      <form onSubmit={onSubmit}>
-        <Paper withBorder p="lg" radius="md">
-          <Tabs defaultValue="seo">
-            <Tabs.List>
-              <Tabs.Tab value="seo">SEO</Tabs.Tab>
-              <Tabs.Tab value="social">Social</Tabs.Tab>
-              <Tabs.Tab value="schema">Schema</Tabs.Tab>
-              <Tabs.Tab value="branding">Branding & Tech</Tabs.Tab>
-              <Tabs.Tab value="operations">Operations</Tabs.Tab>
-              <Tabs.Tab value="security">Security</Tabs.Tab>
-              <Tabs.Tab value="communications">Communications</Tabs.Tab>
-            </Tabs.List>
-            <Tabs.Panel value="seo" pt="md"><SeoTab form={form} /></Tabs.Panel>
-            <Tabs.Panel value="social" pt="md"><SocialTab form={form} /></Tabs.Panel>
-            <Tabs.Panel value="schema" pt="md"><SchemaTab form={form} /></Tabs.Panel>
-            <Tabs.Panel value="branding" pt="md"><BrandingTab form={form} /></Tabs.Panel>
-            <Tabs.Panel value="operations" pt="md"><OperationsTab form={form} /></Tabs.Panel>
-            <Tabs.Panel value="security" pt="md"><SecurityTab form={form} /></Tabs.Panel>
-            <Tabs.Panel value="communications" pt="md"><CommunicationsTab form={form} /></Tabs.Panel>
-          </Tabs>
-        </Paper>
-      </form>
-    </Stack>
+      <div className="fp-tabs">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            className={t.key === tab ? 'fp-tab fp-tab-on' : 'fp-tab'}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="fp-form">
+        <section className="fp-panel">
+          <Active
+            form={form}
+            onTestSmtp={tab === 'communications' ? () => testMut.mutate() : undefined}
+            testing={testMut.isPending}
+          />
+        </section>
+      </div>
+    </form>
   );
 }

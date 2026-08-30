@@ -1,5 +1,4 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { Center, Loader } from '@mantine/core';
 import { useMe } from './useAuth';
 
 export default function ProtectedRoute() {
@@ -8,9 +7,9 @@ export default function ProtectedRoute() {
 
   if (isLoading) {
     return (
-      <Center h="100vh">
-        <Loader />
-      </Center>
+      <div className="fp fp-gate">
+        <p className="fp-loading">Oturum doğrulanıyor…</p>
+      </div>
     );
   }
 

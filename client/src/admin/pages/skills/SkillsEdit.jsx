@@ -1,54 +1,54 @@
-import {
-  ActionIcon, Button, Grid, Group, LoadingOverlay, NumberInput, Paper, Select, Stack, Switch,
-  TextInput, Title, Text,
-} from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
-import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconDeviceFloppy, IconPlus, IconTrash } from '@tabler/icons-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 import { adminApi } from '../../../api/adminApi';
+import { Button, Field, Input, PageHead, Select, Switch } from '../../ui';
+import { useToast } from '../../ui/hooks';
+import { useForm } from '../../ui/useForm';
 
-const TIER_OPTIONS = [
-  { value: 'expert', label: 'Expert' },
-  { value: 'proficient', label: 'Proficient' },
-  { value: 'familiar', label: 'Familiar' },
+/**
+ * Skill categories. The stored grade stays three-valued — the public sheet
+ * shows two rings by folding proficient and familiar together, but the
+ * distinction is still worth recording here.
+ */
+
+const TIERS = [
+  { value: 'expert', label: 'İleri — üretimde sahiplendim' },
+  { value: 'proficient', label: 'Yetkin — üretimde kullandım' },
+  { value: 'familiar', label: 'Aşina — okudum, denedim' },
 ];
 
-const ICON_OPTIONS = ['dotnet', 'database', 'devops', 'frontend', 'cloud', 'tools'];
-
-const skillSchema = z.object({
-  name: z.string().min(1, 'Required').max(120),
-  tier: z.enum(['expert', 'proficient', 'familiar']),
-});
+const ICONS = ['dotnet', 'database', 'devops', 'frontend', 'cloud', 'tools']
+  .map((v) => ({ value: v, label: v }));
 
 const schema = z.object({
   sortOrder: z.number().int().min(0),
-  icon: z.string().min(1).max(64),
-  titleTr: z.string().min(1).max(200),
-  titleEn: z.string().min(1).max(200),
+  icon: z.string().min(1, 'Zorunlu').max(64),
+  titleTr: z.string().min(1, 'Zorunlu').max(200),
+  titleEn: z.string().min(1, 'Zorunlu').max(200),
   isPublished: z.boolean(),
-  skills: z.array(skillSchema),
+  skills: z.array(z.object({
+    name: z.string().min(1, 'Zorunlu').max(120),
+    tier: z.enum(['expert', 'proficient', 'familiar']),
+  })),
 });
 
-function emptyCategory() {
-  return {
-    sortOrder: 0,
-    icon: 'dotnet',
-    titleTr: '',
-    titleEn: '',
-    isPublished: false,
-    skills: [],
-  };
-}
+const empty = () => ({
+  sortOrder: 0,
+  icon: 'dotnet',
+  titleTr: '',
+  titleEn: '',
+  isPublished: false,
+  skills: [],
+});
 
 export default function SkillsEdit() {
   const { id } = useParams();
   const isNew = id === 'new';
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const toast = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'skills', id],
@@ -56,135 +56,110 @@ export default function SkillsEdit() {
     enabled: !isNew,
   });
 
-  const form = useForm({
-    mode: 'uncontrolled',
-    initialValues: emptyCategory(),
-    validate: zodResolver(schema),
-  });
+  const form = useForm({ initial: empty(), schema });
+  const { reset } = form;
 
   useEffect(() => {
-    if (data) form.setValues({ ...data });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+    if (!data) return;
+    reset({ ...empty(), ...data, skills: data.skills ?? [] });
+  }, [data, reset]);
 
   const saveMut = useMutation({
-    mutationFn: (values) => (isNew ? adminApi.createSkillCategory(values) : adminApi.updateSkillCategory(id, values)),
+    mutationFn: (values) => (isNew
+      ? adminApi.createSkillCategory(values)
+      : adminApi.updateSkillCategory(id, values)),
     onSuccess: (saved) => {
       qc.invalidateQueries({ queryKey: ['admin', 'skills'] });
       qc.invalidateQueries({ queryKey: ['public', 'skills'] });
-      notifications.show({ message: 'Saved', color: 'green' });
+      toast('Kaydedildi.', 'ok');
       if (isNew && saved?.id) navigate(`/admin/skills/${saved.id}`, { replace: true });
     },
-    onError: (e) => {
-      notifications.show({
-        title: 'Save failed',
-        message: e?.data?.errors ? JSON.stringify(e.data.errors) : e.message,
-        color: 'red',
-      });
-    },
+    onError: (e) => toast(e?.data?.title ?? e?.message ?? 'Kaydedilemedi.', 'err'),
   });
 
-  const onSubmit = form.onSubmit((values) => saveMut.mutate(values));
-
-  const addSkill = () => {
-    const list = form.getValues().skills || [];
-    form.setFieldValue('skills', [...list, { name: '', tier: 'proficient' }]);
-  };
-  const removeSkill = (idx) => {
-    const list = [...(form.getValues().skills || [])];
-    list.splice(idx, 1);
-    form.setFieldValue('skills', list);
+  const submit = (e) => {
+    e?.preventDefault?.();
+    const result = form.validate();
+    if (!result.ok) { toast('Eksik ya da hatalı alanlar var.', 'err'); return; }
+    saveMut.mutate(result.data);
   };
 
-  const skills = form.getValues().skills || [];
+  if (isLoading) return <p className="fp-loading">Grup okunuyor…</p>;
+
+  const skills = form.value('skills') ?? [];
+  const setSkills = (next) => form.set('skills', next);
 
   return (
-    <Stack gap="lg" pos="relative">
-      <LoadingOverlay visible={isLoading} />
-
-      <Group justify="space-between">
-        <Group gap="xs">
-          <ActionIcon variant="subtle" onClick={() => navigate('/admin/skills')}>
-            <IconArrowLeft size={18} />
-          </ActionIcon>
-          <Title order={2}>{isNew ? 'New category' : 'Edit category'}</Title>
-        </Group>
-        <Button onClick={onSubmit} loading={saveMut.isPending} leftSection={<IconDeviceFloppy size={16} />}>
-          {isNew ? 'Create' : 'Save'}
+    <form onSubmit={submit}>
+      <PageHead eyebrow="İçerik · Yetkinlik" title={isNew ? 'Yeni grup' : form.value('titleTr') || 'Grup'}>
+        <Button onClick={() => navigate('/admin/skills')}>Listeye dön</Button>
+        <Button variant="primary" busy={saveMut.isPending} onClick={submit}>
+          {isNew ? 'Oluştur' : 'Kaydet'}
         </Button>
-      </Group>
+      </PageHead>
 
-      <form onSubmit={onSubmit}>
-        <Stack gap="md">
-          <Paper withBorder p="lg" radius="md">
-            <Stack gap="md">
-              <Title order={4}>Meta</Title>
-              <Grid>
-                <Grid.Col span={{ base: 12, sm: 4 }}>
-                  <Select
-                    label="Icon"
-                    data={ICON_OPTIONS}
-                    searchable
-                    allowDeselect={false}
-                    {...form.getInputProps('icon')}
-                  />
-                </Grid.Col>
-                <Grid.Col span={{ base: 6, sm: 4 }}>
-                  <NumberInput label="Sort order" min={0} {...form.getInputProps('sortOrder')} />
-                </Grid.Col>
-                <Grid.Col span={{ base: 6, sm: 4 }}>
-                  <Stack mt="lg">
-                    <Switch label="Published" {...form.getInputProps('isPublished', { type: 'checkbox' })} />
-                  </Stack>
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <TextInput label="Title (TR)" required {...form.getInputProps('titleTr')} />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <TextInput label="Title (EN)" required {...form.getInputProps('titleEn')} />
-                </Grid.Col>
-              </Grid>
-            </Stack>
-          </Paper>
+      <div className="fp-form">
+        <section className="fp-panel fp-section">
+          <p className="fp-panel-title">Grup</p>
 
-          <Paper withBorder p="lg" radius="md">
-            <Stack gap="md">
-              <Group justify="space-between">
-                <Title order={4}>Skills</Title>
-                <Button size="xs" variant="light" leftSection={<IconPlus size={14} />} onClick={addSkill}>
-                  Add skill
-                </Button>
-              </Group>
-              {skills.length === 0 ? (
-                <Text c="dimmed" size="sm">No skills yet.</Text>
-              ) : (
-                <Stack gap="xs">
-                  {skills.map((_, idx) => (
-                    <Group key={idx} gap="xs" wrap="nowrap" align="flex-end">
-                      <TextInput
-                        style={{ flex: 1 }}
-                        label={idx === 0 ? 'Name' : undefined}
-                        placeholder="C#"
-                        {...form.getInputProps(`skills.${idx}.name`)}
-                      />
-                      <Select
-                        label={idx === 0 ? 'Tier' : undefined}
-                        data={TIER_OPTIONS}
-                        w={140}
-                        allowDeselect={false}
-                        {...form.getInputProps(`skills.${idx}.tier`)}
-                      />
-                      <ActionIcon color="red" variant="subtle" onClick={() => removeSkill(idx)} mb={4}>
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    </Group>
-                  ))}
-                </Stack>
-              )}
-            </Stack>
-          </Paper>
-        </Stack>
-      </form>
-    </Stack>
+          <div className="fp-grid">
+            <Field label="Başlık (TR)" required error={form.error('titleTr')}>
+              <Input {...form.bind('titleTr')} />
+            </Field>
+            <Field label="Başlık (EN)" required error={form.error('titleEn')}>
+              <Input {...form.bind('titleEn')} />
+            </Field>
+            <Field label="Simge" error={form.error('icon')}>
+              <Select options={ICONS} {...form.bind('icon')} />
+            </Field>
+            <Field label="Sıra" error={form.error('sortOrder')}>
+              <Input type="number" min="0" {...form.bind('sortOrder', { number: true })} />
+            </Field>
+          </div>
+
+          <Switch label="Yayında" {...form.bindCheck('isPublished')} />
+        </section>
+
+        <section className="fp-panel fp-section">
+          <div className="fp-repeat-head">
+            <p className="fp-panel-title">Kalemler <span className="fp-cellmuted">({skills.length})</span></p>
+            <Button variant="quiet" onClick={() => setSkills([...skills, { name: '', tier: 'proficient' }])}>
+              Kalem ekle
+            </Button>
+          </div>
+
+          {skills.length === 0 && <p className="fp-hint">Bu grupta henüz kalem yok.</p>}
+
+          {skills.map((skill, i) => (
+            <div className="fp-skill-row" key={`skill-${i}`}>
+              <input
+                className="fp-input"
+                value={skill.name}
+                placeholder="Örn. C#"
+                onChange={(e) => {
+                  const next = [...skills];
+                  next[i] = { ...next[i], name: e.target.value };
+                  setSkills(next);
+                }}
+              />
+              <select
+                className="fp-select"
+                value={skill.tier}
+                onChange={(e) => {
+                  const next = [...skills];
+                  next[i] = { ...next[i], tier: e.target.value };
+                  setSkills(next);
+                }}
+              >
+                {TIERS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+              <Button variant="quiet" onClick={() => setSkills(skills.filter((_, j) => j !== i))} aria-label="Kaldır">✕</Button>
+            </div>
+          ))}
+
+          {form.error('skills') && <p className="fp-error">{form.error('skills')}</p>}
+        </section>
+      </div>
+    </form>
   );
 }

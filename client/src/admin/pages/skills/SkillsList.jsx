@@ -1,34 +1,30 @@
-import { Stack, Text } from '@mantine/core';
 import { adminApi } from '../../../api/adminApi';
 import AdminDataTable, { StatusBadge } from '../../components/AdminDataTable';
+import { Bilingual, When } from '../../components/cells';
 
 const columns = [
-  { header: 'Icon', render: (r) => <Text ff="monospace" size="sm">{r.icon}</Text> },
-  { header: 'Title', render: (r) => (
-    <Stack gap={2}>
-      <Text size="sm" fw={500}>{r.titleEn}</Text>
-      <Text size="xs" c="dimmed">{r.titleTr}</Text>
-    </Stack>
-  ) },
-  { header: 'Skills', render: (r) => <Text size="sm">{r.skills?.length ?? 0}</Text> },
-  { header: 'Status', render: (r) => <StatusBadge published={r.isPublished} /> },
-  { header: 'Updated', render: (r) => <Text size="xs" c="dimmed">{new Date(r.updatedAt).toLocaleDateString()}</Text> },
+  { header: 'Simge', render: (r) => <span className="fp-mono">{r.icon}</span> },
+  { header: 'Başlık', render: (r) => <Bilingual en={r.titleEn} tr={r.titleTr} /> },
+  { header: 'Kalem', render: (r) => r.skills?.length ?? 0, align: 'right' },
+  { header: 'Durum', render: (r) => <StatusBadge published={r.isPublished} /> },
+  { header: 'Güncelleme', render: (r) => <When value={r.updatedAt} /> },
 ];
 
 export default function SkillsList() {
   return (
     <AdminDataTable
-      title="Skill categories"
-      newButton={{ to: '/admin/skills/new', label: 'New category' }}
+      eyebrow="İçerik"
+      title="Yetkinlik"
+      newButton={{ to: '/admin/skills/new', label: 'Yeni grup' }}
       listKey={['admin', 'skills']}
       publicKey={['public', 'skills']}
       queryFn={() => adminApi.listSkillCategories()}
       deleteFn={(id) => adminApi.deleteSkillCategory(id)}
-      deleteConfirm={(r) => `Delete category "${r.titleEn}"?`}
-      deleteToast="Category deleted"
+      deleteConfirm={(r) => `"${r.titleEn || r.titleTr}" grubu ve içindeki kalemler silinecek.`}
+      deleteToast="Grup silindi."
       editPath={(r) => `/admin/skills/${r.id}`}
       columns={columns}
-      emptyLabel="No categories."
+      emptyLabel="Henüz grup yok."
     />
   );
 }

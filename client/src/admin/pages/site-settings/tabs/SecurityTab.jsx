@@ -1,91 +1,50 @@
-import { Code, Paper, Stack, TagsInput, Title, Text } from '@mantine/core';
+import { Field, TagsInput } from '../../../ui';
 
-const CSP_KEYS = [
-  ['defaultSrc', 'default-src'],
-  ['scriptSrc', 'script-src'],
-  ['styleSrc', 'style-src'],
-  ['fontSrc', 'font-src'],
-  ['imgSrc', 'img-src'],
-  ['connectSrc', 'connect-src'],
-  ['frameSrc', 'frame-src'],
+/**
+ * Content Security Policy. Each directive is a list of sources — edited as
+ * chips because that is exactly what they are, and a free-text box would
+ * invite the kind of typo that silently breaks the whole site.
+ */
+const DIRECTIVES = [
+  { key: 'defaultSrc', label: 'default-src' },
+  { key: 'scriptSrc', label: 'script-src' },
+  { key: 'styleSrc', label: 'style-src' },
+  { key: 'fontSrc', label: 'font-src' },
+  { key: 'imgSrc', label: 'img-src' },
+  { key: 'connectSrc', label: 'connect-src' },
+  { key: 'frameSrc', label: 'frame-src' },
 ];
 
-const ANALYTICS_EXTENSIONS = {
-  scriptSrc: ['https://www.googletagmanager.com', 'https://www.google-analytics.com'],
-  connectSrc: ['https://www.google-analytics.com', 'https://*.analytics.google.com'],
-  imgSrc: ['https://www.google-analytics.com'],
-  frameSrc: ['https://www.googletagmanager.com'],
-};
-
-function buildCspPreview(csp, analyticsOn) {
-  const parts = [];
-  for (const [key, directive] of CSP_KEYS) {
-    const values = new Set(csp?.[key] ?? []);
-    if (analyticsOn && ANALYTICS_EXTENSIONS[key]) {
-      for (const v of ANALYTICS_EXTENSIONS[key]) values.add(v);
-    }
-    if (values.size === 0 && directive === 'frame-src') continue;
-    parts.push(`${directive} ${[...values].join(' ')};`);
-  }
-  return parts.join(' ');
-}
-
-function buildRobotsPreview(extras, robotsIndex, canonicalBase) {
-  const directive = robotsIndex ? 'Allow: /' : 'Disallow: /';
-  const extraBlock = (extras ?? []).filter(Boolean).join('\n');
-  const body = extraBlock ? `${directive}\n\n${extraBlock}` : directive;
-  return `User-agent: *\n${body}\n\nSitemap: ${(canonicalBase || '').replace(/\/$/, '')}/sitemap.xml\n`;
-}
-
 export default function SecurityTab({ form }) {
-  const v = form.getValues();
-  const csp = v.security?.csp ?? {};
-  const extras = v.security?.robotsExtraDirectives ?? [];
-  const analyticsOn = !!v.operations?.analytics?.enabled;
-  const robotsIndex = v.branding?.robotsIndex !== false;
-  const canonical = v.branding?.canonicalBaseUrl ?? '';
-
   return (
-    <Stack gap="xl">
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Title order={4}>Content Security Policy</Title>
-          <Text size="xs" c="dimmed">
-            Source list per directive. Literal values (&#39;self&#39;, data:) or full URLs.
-            When Analytics is enabled, GA/GTM hosts are appended automatically (visible in the preview).
-          </Text>
-          {CSP_KEYS.map(([key, label]) => (
+    <>
+      <p className="fp-panel-title">İçerik güvenlik politikası</p>
+      <p className="fp-hint">
+        Buradaki değerler üretilen <code>index.html</code>'in CSP başlığına giriyor.
+        Bir kaynağı kaldırırsan ilgili varlık sessizce yüklenmez — değişiklikten sonra siteyi kontrol et.
+      </p>
+
+      <div className="fp-csp">
+        {DIRECTIVES.map((d) => (
+          <Field key={d.key} label={d.label}>
             <TagsInput
-              key={key}
-              label={label}
-              value={csp[key] ?? []}
-              onChange={(vals) => form.setFieldValue(`security.csp.${key}`, vals)}
+              value={form.value(`security.csp.${d.key}`) ?? []}
+              onChange={(v) => form.set(`security.csp.${d.key}`, v)}
+              placeholder="'self'"
             />
-          ))}
-          <Text size="xs" c="dimmed">Preview (final CSP):</Text>
+          </Field>
+        ))}
+      </div>
 
-          <Code block>{buildCspPreview(csp, analyticsOn)}</Code>
-        </Stack>
-      </Paper>
+      <hr className="fp-rule" />
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="sm">
-          <Title order={4}>Robots Extras</Title>
-          <Text size="xs" c="dimmed">
-            Extra directive lines. Each line must start with <Code>Allow:</Code>, <Code>Disallow:</Code>,
-            <Code>Crawl-delay:</Code>, <Code>User-agent:</Code>, or <Code>Sitemap:</Code>.
-          </Text>
-          <TagsInput
-            label="Extra lines"
-            placeholder="Disallow: /admin/"
-            value={extras}
-            onChange={(vals) => form.setFieldValue('security.robotsExtraDirectives', vals)}
-          />
-          <Text size="xs" c="dimmed">Preview (robots.txt):</Text>
-
-          <Code block>{buildRobotsPreview(extras, robotsIndex, canonical)}</Code>
-        </Stack>
-      </Paper>
-    </Stack>
+      <Field label="robots.txt ek satırları" hint="Her satır dosyaya olduğu gibi ekleniyor.">
+        <TagsInput
+          value={form.value('security.robotsExtraDirectives') ?? []}
+          onChange={(v) => form.set('security.robotsExtraDirectives', v)}
+          placeholder="Disallow: /admin"
+        />
+      </Field>
+    </>
   );
 }
