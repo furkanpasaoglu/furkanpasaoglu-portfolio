@@ -129,8 +129,12 @@ export default function SiteTextPanel() {
 /** The stored form of a draft value, or null to drop the key entirely. */
 function write(field, value) {
   switch (field.kind) {
-    case 'rich':
-      return value && !isEmptyDoc(toDoc(value)) ? value : null;
+    // Normalised on the way out, so a record converted without the editor
+    // being touched is stored as a document rather than as the text it read.
+    case 'rich': {
+      const doc = toDoc(value);
+      return isEmptyDoc(doc) ? null : doc;
+    }
     case 'spec': {
       const rows = cleanRows(value);
       return rows.length ? rows : null;
