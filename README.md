@@ -10,11 +10,15 @@
 
 ## About
 
-Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Software Developer based in Istanbul. Every piece of content on the public site (projects, experience, skills, blog posts, SEO metadata, contact form settings) is driven by a custom admin panel — no redeploy needed to change content.
+Personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Software Developer based in Istanbul.
+
+The public site is **"The Compiler & Architecture Blueprint"**: a technical drawing set instead of a landing page — numbered sheets, a CAD grid that warps under the pointer, projects drawn as a dependency graph, and a terminal you can navigate with. Every word, project, note and setting in it comes from the database and is edited in a panel built for this site alone. Nothing here needs a redeploy to change.
 
 ## Hakkında
 
-**Furkan Paşaoğlu**'nun kişisel portföy + admin CMS uygulaması. Public site'taki tüm içerik (projeler, deneyim, yetenekler, blog yazıları, SEO metadata, iletişim form ayarları) özel bir admin panel üzerinden yönetilir — içerik değişikliği için redeploy gerekmez.
+**Furkan Paşaoğlu**'nun kişisel portföy + admin CMS uygulaması.
+
+Public site **"The Compiler & Architecture Blueprint"**: açılış sayfası yerine bir teknik çizim seti — numaralı paftalar, imleçle bükülen CAD ızgarası, bağımlılık şeması olarak çizilen projeler ve içinde gezinebildiğin bir terminal. Sitedeki her metin, proje, not ve ayar veritabanından gelir ve yalnızca bu site için yazılmış bir panelden düzenlenir. Hiçbiri için redeploy gerekmez.
 
 ---
 
@@ -23,7 +27,7 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 ```
 ┌────────────────────────────────────────────────────────┐
 │  nginx (client container)                               │
-│  ├── React SPA           ───  /                          │
+│  ├── Blueprint SPA        ───  /, /projects, /blog/<slug>   │
 │  ├── React admin SPA     ───  /admin/*                   │
 │  └── Reverse proxy to server:                            │
 │      /api/*, /media/*, /scalar/*, /openapi/*             │
@@ -50,26 +54,42 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 
 ## Features / Özellikler
 
-### Public site
+### Public site — "The Compiler & Architecture Blueprint"
 
-- **Bilingual TR/EN** — instant language toggle, content served from DB per request
-- **Dark / Light theme** — persists to `localStorage`, respects `prefers-color-scheme`
-- **Dynamic content** — every section is DB-driven; admin panel edits appear live after re-render
-- **Sections:** Hero · About · Skills · Projects · Experience · Blog · Contact
-- **Blog** with block editor (paragraph, heading, code, note) — bilingual per post
+The site is a technical drawing set rather than a scrolling page. Seven
+numbered **sheets** replace sections; the viewport never scrolls; navigation
+is the rail, the number keys, or a terminal that takes `ls` and `cd`.
+
+- **Boot sequence** — a 1.5s runtime log of facts that are actually true of
+  this deployment (.NET 9, PostgreSQL 17, applied migrations, Keycloak)
+- **Sheets:** Index · About · Projects · Background · Skills · Notes · Contact
+- **Projects as a dependency graph** — every component and the libraries it
+  pulls in, drawn from the tags in the database, wires included
+- **Skills as a polar diagram** — three domains as sectors, two grades as rings
+- **Terminal** — `ls`, `cd <sheet>`, `lang`, `open`, `dotnet --info`, plus any
+  command written in the admin panel
+- **A `NullReferenceException` instead of a 404**, with a stack trace naming
+  the sheet you asked for
+- **Bilingual TR/EN** — instant toggle, content served from DB per request
+- **Notes are addressable** — `/blog/<slug>` opens that note directly, which
+  is what the sitemap advertises
 - **Contact form** with SMTP delivery + optional auto-reply
-- **SEO managed from admin** — meta tags, Open Graph, JSON-LD schema, sitemap, robots.txt all generated from DB
+- **SEO managed from admin** — meta tags, Open Graph, JSON-LD schema, sitemap,
+  robots.txt all generated from DB
+- **Maintenance mode** and per-sheet visibility, both switched from the panel
 
 ### Admin CMS (`/admin`)
 
 - **Keycloak OIDC** — authorization code + PKCE in a **BFF pattern**: the code-to-token exchange happens server-side and access/refresh tokens live in httpOnly cookies, never in the browser. Refresh rotation, Keycloak realm roles mapped to app roles, 5/min login rate limit
 - **Full CRUD** for: projects, experience, skills, blog posts, translations, personal info
-- **Blog block editor** — reorderable blocks, per-language content
+- **Rich text editor** (TipTap) for note bodies and long descriptions — stored as a document, never as HTML, so nothing rendered on the public site can become markup
 - **Site Settings:** SEO · Social · Schema.org · Branding · Operations · Security (CSP) · Communications (SMTP)
 - **Dashboard** — system info, uptime, content counts, cache clear + manual site re-render
 - **Messages inbox** — contact form submissions with read/unread toggle and auto-reply config
 - **CV upload** (PDF, stored in `uploads` volume)
-- **Maintenance mode** toggle + per-section visibility switches
+- **Maintenance mode** toggle + per-sheet visibility switches
+- **Terminal commands** — add a command the site's terminal answers to, with a
+  bilingual reply and a live preview of how it will print
 
 ---
 
@@ -92,9 +112,13 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 | React 19 + Vite 6 | Public SPA + admin SPA |
 | React Router | Admin routing |
 | TanStack Query | Data fetching + cache |
-| Mantine 7 | Admin UI kit (scoped to `/admin` only) |
-| Zod + @mantine/form | Form validation |
-| React Icons / Tabler Icons | Icons |
+| TipTap | Rich text editor in the admin — writes a document, not HTML |
+| Zod | Form validation (the admin's form engine is its own ~90 lines) |
+| React Icons | Icons |
+
+The admin panel has no UI framework: buttons, fields, tables, toasts and the
+confirm dialog are plain elements in `client/src/admin/ui/`, sharing the
+public site's design tokens so the two cannot drift apart.
 
 ### Infra
 
@@ -114,11 +138,12 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 .
 ├── client/                        # React (public + admin) + Vite + nginx
 │   ├── src/
-│   │   ├── components/sections/   # Public sections (Hero, About, Projects, …)
-│   │   ├── admin/                 # Admin SPA (Mantine scoped here)
+│   │   ├── blueprint/             # The public site — sheets, terminal, CAD grid
+│   │   ├── admin/                 # Admin SPA — own UI primitives, no framework
 │   │   ├── api/                   # publicApi / adminApi / endpoints
-│   │   ├── context/               # Theme, Language, SiteMeta providers
-│   │   └── hooks/                 # usePublicData, useSelectableDetail, …
+│   │   ├── context/               # Language + SiteMeta providers
+│   │   ├── utils/                 # Rich document model, URL allow-listing
+│   │   └── hooks/                 # usePublicData, useSiteOperations
 │   ├── Dockerfile                 # Multi-stage: build → nginx
 │   └── nginx.conf                 # Proxies /api, /media, /scalar, /openapi
 │
@@ -128,11 +153,12 @@ Full-stack personal portfolio + admin CMS for **Furkan Paşaoğlu**, Senior Soft
 │   ├── Contracts/                 # DTOs grouped by feature
 │   ├── Validators/                # FluentValidation classes
 │   ├── Services/                  # SiteRenderer, EmailSender, MaintenanceMiddleware, …
-│   ├── Options/                   # KeycloakOptions, SmtpOptions, …
-│   ├── Data/                      # AppDbContext, Seeder
+│   ├── Options/                   # KeycloakOptions, WebStaticOptions
+│   ├── Data/                      # AppDbContext, Seeder, EF Core migrations
 │   ├── Common/                    # Lang + slug helpers
-│   ├── Migrations/                # EF Core migrations
 │   └── SeedData/                  # First-boot JSON seed
+│
+├── server/Portfolio.Api.Tests/    # xUnit — validation and contract rules
 │
 ├── docker-compose.yml                   # Base (postgres + server + client)
 ├── docker-compose.override.yml.example  # Dev template (loopback ports)
@@ -163,11 +189,22 @@ docker compose up -d
 
 # 4. Open
 #    http://localhost/           (public site)
-#    http://localhost/admin      (admin login — credentials from .env)
+#    http://localhost/admin      (admin — sign in through Keycloak)
 #    http://localhost:8080/scalar/v1  (API docs)
 ```
 
 The override file binds Postgres to `127.0.0.1:5432` and the server to `127.0.0.1:8080` for easy local inspection. It is **gitignored** so it never reaches production.
+
+### Tests
+
+```bash
+dotnet test                  # server: validation and contract rules
+cd client && npm run lint    # client
+```
+
+The suite covers the rules that are easy to get quietly wrong: URL scheme
+allow-listing, required rich-text content, terminal command names, and the
+section-toggle contract.
 
 ---
 
