@@ -46,7 +46,7 @@ export const endpoints = {
   adminPersonal: `${API_BASE}/admin/personal`,
 
   // Admin — Uploads
-  adminUploadCv: `${API_BASE}/admin/uploads/cv`,
+  adminUploadCv: (lang) => `${API_BASE}/admin/uploads/cv/${lang}`,
 
   // Admin — Site Settings
   adminSiteSettings: `${API_BASE}/admin/site-settings`,

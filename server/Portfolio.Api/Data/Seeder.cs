@@ -192,7 +192,8 @@ public class Seeder(
             Location = row.Location,
             Github = row.Github,
             Linkedin = row.Linkedin,
-            CvUrl = row.CvUrl,
+            CvUrlTr = row.CvUrlTr,
+            CvUrlEn = row.CvUrlEn,
             UpdatedAt = DateTime.UtcNow,
         });
         await db.SaveChangesAsync(ct);
@@ -274,6 +275,7 @@ public class Seeder(
         public string Location { get; set; } = string.Empty;
         public string? Github { get; set; }
         public string? Linkedin { get; set; }
-        public string? CvUrl { get; set; }
+        public string? CvUrlTr { get; set; }
+        public string? CvUrlEn { get; set; }
     }
 }

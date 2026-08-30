@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { LanguageContext } from '../context/LanguageContext';
 import { usePublicPersonal } from '../hooks/usePublicData';
 import { resolveSheet, sheetIndex, visibleSheets } from './sheetRegistry';
+import { siteText } from './siteText';
 import BootSequence, { BOOT_FLAG } from './BootSequence';
 import CadGrid from './CadGrid';
 import TitleBlock from './TitleBlock';
@@ -40,7 +41,7 @@ export default function BlueprintApp({ sections }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang, toggleLang, t } = useContext(LanguageContext) ?? { lang: 'en' };
-  const { data: personal } = usePublicPersonal();
+  const { data: personal } = usePublicPersonal(lang);
 
   // Which sheets exist at all is a setting; everything numbered below counts
   // only these, so hiding one renumbers the rest instead of leaving a gap.
@@ -159,7 +160,7 @@ export default function BlueprintApp({ sections }) {
           onLang={setLang}
           onGo={go}
           name={personal?.name ?? 'Furkan Paşaoğlu'}
-          role={tr ? 'Kıdemli Yazılım Geliştirici' : 'Senior Software Developer'}
+          role={siteText(t, lang, 'role')}
         />
 
         <main className="bp-body" id="bp-main">

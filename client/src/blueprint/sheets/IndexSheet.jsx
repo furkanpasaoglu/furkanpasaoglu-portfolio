@@ -1,5 +1,6 @@
 import { sheetLabel, sheetNo, sheetTotal } from '../sheetRegistry';
 import { safeUrl } from '../../utils/safeUrl';
+import { siteText } from '../siteText';
 
 /**
  * The cover sheet. A drawing set opens with a title page and a sheet index —
@@ -7,7 +8,7 @@ import { safeUrl } from '../../utils/safeUrl';
  * characteristic artefact in this subject's world is a titled, indexed
  * technical document, so that is what the page opens with.
  */
-export default function IndexSheet({ lang, personal, sheets, onGo }) {
+export default function IndexSheet({ lang, t, personal, sheets, onGo }) {
   const tr = lang === 'tr';
 
   return (
@@ -17,16 +18,10 @@ export default function IndexSheet({ lang, personal, sheets, onGo }) {
       <h2 className="bp-h">
         {personal?.name ?? 'Furkan Paşaoğlu'}
         <br />
-        <span className="bp-h-sub">
-          {tr ? 'Kıdemli Yazılım Geliştirici' : 'Senior Software Developer'}
-        </span>
+        <span className="bp-h-sub">{siteText(t, lang, 'role')}</span>
       </h2>
 
-      <p className="bp-lede">
-        {tr
-          ? 'Backend sistemleri kuruyorum: .NET, PostgreSQL, kimlik doğrulama ve dağıtım hatları. Baktığın site de onlardan biri — içeriğini yöneten admin paneli, kimlik sunucusu ve kendi HTML’ini üreten render servisi bu repoda duruyor.'
-          : 'I build backend systems: .NET, PostgreSQL, identity and deployment pipelines. This site is one of them — the admin panel behind its content, the identity server, and the renderer that writes its own HTML all live in this repository.'}
-      </p>
+      <p className="bp-lede">{siteText(t, lang, 'lede')}</p>
 
       <div className="bp-cols">
         <div>

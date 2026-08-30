@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Portfolio.Api.Common;
 using Portfolio.Api.Data;
 using Portfolio.Api.Domain;
 
@@ -10,7 +11,13 @@ public static class UploadsEndpoints
     public record CvUploadResult(string CvUrl);
 
     private const long MaxBytes = 5 * 1024 * 1024; // 5 MB
-    private const string CvFileName = "cv.pdf";
+
+    /// <summary>
+    /// One file per language, named after it. The name is built from the
+    /// normalised language rather than anything the request supplies, so no
+    /// input reaches the path.
+    /// </summary>
+    private static string CvFileName(string lang) => $"cv-{lang}.pdf";
 
     public static IEndpointRouteBuilder MapUploadsEndpoints(this IEndpointRouteBuilder app)
     {
@@ -19,15 +26,17 @@ public static class UploadsEndpoints
                        .RequireAuthorization()
                        .DisableAntiforgery();
 
-        admin.MapPost("cv", UploadCvAsync);
-        admin.MapDelete("cv", DeleteCvAsync);
+        admin.MapPost("cv/{lang}", UploadCvAsync);
+        admin.MapDelete("cv/{lang}", DeleteCvAsync);
 
         return app;
     }
 
     private static async Task<Results<Ok<CvUploadResult>, BadRequest<string>>> UploadCvAsync(
-        HttpRequest req, AppDbContext db, IWebHostEnvironment env, CancellationToken ct)
+        string lang, HttpRequest req, AppDbContext db, IWebHostEnvironment env, CancellationToken ct)
     {
+        var l = LangHelpers.Normalize(lang);
+
         if (!req.HasFormContentType)
             return TypedResults.BadRequest("multipart/form-data required");
 
@@ -43,47 +52,51 @@ public static class UploadsEndpoints
 
         var uploadsDir = Path.Combine(env.ContentRootPath, "uploads");
         Directory.CreateDirectory(uploadsDir);
-        var target = Path.Combine(uploadsDir, CvFileName);
 
-        await using (var stream = File.Create(target))
+        await using (var stream = File.Create(Path.Combine(uploadsDir, CvFileName(l))))
         {
             await file.CopyToAsync(stream, ct);
         }
 
-        var url = $"/media/{CvFileName}?v={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        // The query string busts the CDN and browser cache: the path is stable
+        // but the file behind it just changed.
+        var url = $"/media/{CvFileName(l)}?v={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
 
-        // Persist to personal.cv_url
         var p = await db.Personals.FirstOrDefaultAsync(ct);
         if (p is null)
         {
-            p = new Personal { Id = 1, CvUrl = url, UpdatedAt = DateTime.UtcNow };
+            p = new Personal { Id = 1 };
             db.Personals.Add(p);
         }
-        else
-        {
-            p.CvUrl = url;
-            p.UpdatedAt = DateTime.UtcNow;
-        }
+        SetCv(p, l, url);
+        p.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
         return TypedResults.Ok(new CvUploadResult(url));
     }
 
     private static async Task<Results<NoContent, NotFound>> DeleteCvAsync(
-        AppDbContext db, IWebHostEnvironment env, CancellationToken ct)
+        string lang, AppDbContext db, IWebHostEnvironment env, CancellationToken ct)
     {
-        var target = Path.Combine(env.ContentRootPath, "uploads", CvFileName);
+        var l = LangHelpers.Normalize(lang);
+        var target = Path.Combine(env.ContentRootPath, "uploads", CvFileName(l));
         var existed = File.Exists(target);
         if (existed) File.Delete(target);
 
         var p = await db.Personals.FirstOrDefaultAsync(ct);
         if (p is not null)
         {
-            p.CvUrl = null;
+            SetCv(p, l, null);
             p.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);
         }
 
         return existed ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
+
+    private static void SetCv(Personal p, string lang, string? url)
+    {
+        if (lang == LangHelpers.Tr) p.CvUrlTr = url;
+        else p.CvUrlEn = url;
     }
 }

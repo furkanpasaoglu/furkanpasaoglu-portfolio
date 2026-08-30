@@ -77,10 +77,10 @@ export const adminApi = {
   testSmtp: (to) => post(endpoints.adminMessageTestSmtp, { to }),
 
   // ── Uploads ──
-  uploadCv: (file) => {
+  uploadCv: (lang, file) => {
     const fd = new FormData();
     fd.append('file', file);
-    return request(endpoints.adminUploadCv, { method: 'POST', body: fd, auth: true });
+    return request(endpoints.adminUploadCv(lang), { method: 'POST', body: fd, auth: true });
   },
-  deleteCv: () => del(endpoints.adminUploadCv),
+  deleteCv: (lang) => del(endpoints.adminUploadCv(lang)),
 };

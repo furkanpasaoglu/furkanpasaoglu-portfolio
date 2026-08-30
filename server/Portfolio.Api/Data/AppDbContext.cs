@@ -127,7 +127,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Location).HasColumnName("location").HasMaxLength(128);
             e.Property(x => x.Github).HasColumnName("github");
             e.Property(x => x.Linkedin).HasColumnName("linkedin");
-            e.Property(x => x.CvUrl).HasColumnName("cv_url");
+            e.Property(x => x.CvUrlTr).HasColumnName("cv_url_tr");
+            e.Property(x => x.CvUrlEn).HasColumnName("cv_url_en");
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });
 

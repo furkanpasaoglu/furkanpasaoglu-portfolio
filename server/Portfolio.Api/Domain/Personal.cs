@@ -12,8 +12,12 @@ public class Personal
     public string? Github { get; set; }
     public string? Linkedin { get; set; }
 
-    /// <summary>Relative path: /uploads/cv.pdf or /Furkan-...pdf for static.</summary>
-    public string? CvUrl { get; set; }
+    // One CV per language. Serving a Turkish CV to a foreign recruiter is
+    // worse than serving none, so the two are stored separately. Either may
+    // be unset; the public endpoint falls back to the other, because a
+    // half-filled profile should still offer a working link.
+    public string? CvUrlTr { get; set; }
+    public string? CvUrlEn { get; set; }
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

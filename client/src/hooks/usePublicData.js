@@ -34,9 +34,11 @@ export const usePublicBlogPost = (slug, lang) => useQuery({
   enabled: !!slug,
 });
 
-export const usePublicPersonal = () => useQuery({
-  queryKey: ['public', 'personal'],
-  queryFn: () => publicApi.getPersonal(),
+export const usePublicPersonal = (lang) => useQuery({
+  // The CV link is language-picked on the server, so the language is part of
+  // what identifies this response.
+  queryKey: ['public', 'personal', lang],
+  queryFn: () => publicApi.getPersonal(lang),
   staleTime,
 });
 

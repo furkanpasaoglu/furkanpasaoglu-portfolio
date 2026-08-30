@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { adminApi } from '../../../api/adminApi';
 import { Button, Field, Input, PageHead } from '../../ui';
+import SiteTextPanel from './SiteTextPanel';
 import { safeUrl } from '../../../utils/safeUrl';
 import { useToast } from '../../ui/hooks';
 import { useForm } from '../../ui/useForm';
@@ -13,15 +14,15 @@ const schema = z.object({
   location: z.string().min(1, 'Zorunlu').max(200),
   github: z.string().url('Geçerli URL').or(z.literal('')).nullable(),
   linkedin: z.string().url('Geçerli URL').or(z.literal('')).nullable(),
-  cvUrl: z.string().max(500).nullable().or(z.literal('')),
+  cvUrlTr: z.string().max(500).nullable().or(z.literal('')),
+  cvUrlEn: z.string().max(500).nullable().or(z.literal('')),
 });
 
-const empty = () => ({ name: '', email: '', location: '', github: '', linkedin: '', cvUrl: '' });
+const empty = () => ({ name: '', email: '', location: '', github: '', linkedin: '', cvUrlTr: '', cvUrlEn: '' });
 
 export default function PersonalEdit() {
   const qc = useQueryClient();
   const toast = useToast();
-  const fileRef = useRef(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'personal'],
@@ -39,7 +40,8 @@ export default function PersonalEdit() {
       location: data.location ?? '',
       github: data.github ?? '',
       linkedin: data.linkedin ?? '',
-      cvUrl: data.cvUrl ?? '',
+      cvUrlTr: data.cvUrlTr ?? '',
+      cvUrlEn: data.cvUrlEn ?? '',
     });
   }, [data, reset]);
 
@@ -48,7 +50,8 @@ export default function PersonalEdit() {
       ...values,
       github: values.github?.trim() || null,
       linkedin: values.linkedin?.trim() || null,
-      cvUrl: values.cvUrl?.trim() || null,
+      cvUrlTr: values.cvUrlTr?.trim() || null,
+      cvUrlEn: values.cvUrlEn?.trim() || null,
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin', 'personal'] });
@@ -59,9 +62,9 @@ export default function PersonalEdit() {
   });
 
   const uploadMut = useMutation({
-    mutationFn: (file) => adminApi.uploadCv(file),
+    mutationFn: ({ lang, file }) => adminApi.uploadCv(lang, file).then((r) => ({ ...r, lang })),
     onSuccess: (res) => {
-      if (res?.url) form.set('cvUrl', res.url);
+      if (res?.cvUrl) form.set(res.lang === 'tr' ? 'cvUrlTr' : 'cvUrlEn', res.cvUrl);
       toast('CV yüklendi. Kaydetmeyi unutma.', 'ok');
     },
     onError: (e) => toast(e?.message ?? 'Yükleme başarısız.', 'err'),
@@ -76,7 +79,6 @@ export default function PersonalEdit() {
 
   if (isLoading) return <p className="fp-loading">Künye okunuyor…</p>;
 
-  const cvUrl = form.value('cvUrl');
 
   return (
     <form onSubmit={submit}>
@@ -110,40 +112,67 @@ export default function PersonalEdit() {
           </div>
         </section>
 
+        <SiteTextPanel />
+
         <section className="fp-panel fp-section">
           <p className="fp-panel-title">CV</p>
+          <p className="fp-hint">
+            Ziyaretçi okuduğu dilin CV'sini indirir. Bir dil boşsa diğeri
+            verilir, yani en az birini yüklemek yeterli.
+          </p>
 
-          <Field
-            label="Dosya adresi"
-            hint="Yükleyince otomatik dolar. Kaydetmeden kalıcı olmaz."
-            error={form.error('cvUrl')}
-          >
-            <Input mono placeholder="/media/cv.pdf" {...form.bind('cvUrl')} />
-          </Field>
-
-          <div className="fp-btns">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/pdf"
-              className="fp-file"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) uploadMut.mutate(file);
-                e.target.value = '';
-              }}
-            />
-            <Button busy={uploadMut.isPending} onClick={() => fileRef.current?.click()}>
-              PDF yükle
-            </Button>
-            {cvUrl && (
-              <a className="fp-btn" href={safeUrl(cvUrl)} target="_blank" rel="noopener noreferrer">
-                Mevcut CV'yi aç
-              </a>
-            )}
-          </div>
+          <CvSlot
+            lang="tr"
+            label="Türkçe CV"
+            field="cvUrlTr"
+            form={form}
+            upload={uploadMut}
+          />
+          <CvSlot
+            lang="en"
+            label="İngilizce CV"
+            field="cvUrlEn"
+            form={form}
+            upload={uploadMut}
+          />
         </section>
       </div>
     </form>
+  );
+}
+
+/** One language's CV: the stored path, an upload button, and a way to check it. */
+function CvSlot({ lang, label, field, form, upload }) {
+  const fileRef = useRef(null);
+  const url = form.value(field);
+  const busy = upload.isPending && upload.variables?.lang === lang;
+
+  return (
+    <Field
+      label={label}
+      hint="Yükleyince adres otomatik dolar. Kaydetmeden kalıcı olmaz."
+      error={form.error(field)}
+    >
+      <Input mono placeholder={`/media/cv-${lang}.pdf`} {...form.bind(field)} />
+      <div className="fp-btns">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/pdf"
+          className="fp-file"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) upload.mutate({ lang, file });
+            e.target.value = '';
+          }}
+        />
+        <Button busy={busy} onClick={() => fileRef.current?.click()}>PDF yükle</Button>
+        {url && (
+          <a className="fp-btn" href={safeUrl(url)} target="_blank" rel="noopener noreferrer">
+            Aç
+          </a>
+        )}
+      </div>
+    </Field>
   );
 }
