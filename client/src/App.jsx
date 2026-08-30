@@ -3,24 +3,24 @@ import { Route, Routes } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LanguageProvider } from './context/LanguageProvider';
 import { SiteMetaProvider } from './context/SiteMetaProvider';
-import { ThemeProvider } from './context/ThemeProvider';
-import Navbar from './components/layout/Navbar';
-import Footer from './components/layout/Footer';
-import Hero from './components/sections/Hero';
-import About from './components/sections/About';
-import Skills from './components/sections/Skills';
-import Projects from './components/sections/Projects';
-import Experience from './components/sections/Experience';
-import Blog from './components/sections/Blog';
-import Contact from './components/sections/Contact';
 import MaintenancePage from './components/MaintenancePage';
 import { useSiteOperations } from './hooks/useSiteOperations';
 
-// Admin SPA ships as a separate chunk — public visitors never download it.
+// Both are separate chunks. A visitor never downloads the admin, and the
+// blueprint's stylesheet arrives with its own chunk rather than the entry.
 const AdminRouter = lazy(() => import('./admin/AdminRouter'));
+const BlueprintApp = lazy(() => import('./blueprint/BlueprintApp'));
 
+/**
+ * The public site: "The Compiler & Architecture Blueprint".
+ *
+ * Maintenance mode and the sheet visibility switches are both read here,
+ * because both are answers to "what should a visitor see at all" — which is
+ * a question about the route, not about any one sheet.
+ */
 function PublicSite() {
   const ops = useSiteOperations();
+
   if (ops.maintenanceMode) {
     return (
       <MaintenancePage
@@ -29,21 +29,18 @@ function PublicSite() {
       />
     );
   }
-  const { sectionsEnabled } = ops;
+
   return (
-    <>
-      <Navbar />
-      <main>
-        {sectionsEnabled.hero && <Hero />}
-        {sectionsEnabled.about && <About />}
-        {sectionsEnabled.skills && <Skills />}
-        {sectionsEnabled.projects && <Projects />}
-        {sectionsEnabled.experience && <Experience />}
-        {sectionsEnabled.blog && <Blog />}
-        {sectionsEnabled.contact && <Contact />}
-      </main>
-      <Footer />
-    </>
+    <Suspense
+      fallback={
+        // Matte ground while the chunk loads. Inline because the blueprint's
+        // stylesheet arrives with the chunk, and the page must not flash
+        // white before the boot sequence — that is the first impression.
+        <div style={{ position: 'fixed', inset: 0, background: '#0a0b0d', zIndex: 2 }} />
+      }
+    >
+      <BlueprintApp sections={ops.sectionsEnabled} />
+    </Suspense>
   );
 }
 
@@ -55,13 +52,11 @@ export default function App() {
         path="/*"
         element={
           <ErrorBoundary>
-            <ThemeProvider>
-              <LanguageProvider>
-                <SiteMetaProvider>
-                  <PublicSite />
-                </SiteMetaProvider>
-              </LanguageProvider>
-            </ThemeProvider>
+            <LanguageProvider>
+              <SiteMetaProvider>
+                <PublicSite />
+              </SiteMetaProvider>
+            </LanguageProvider>
           </ErrorBoundary>
         }
       />

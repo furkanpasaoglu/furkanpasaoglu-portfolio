@@ -1,0 +1,476 @@
+/* ─────────────────────────────────────────────────────────────────────
+   THE COMPILER & ARCHITECTURE BLUEPRINT
+   Shell tokens, titleblock, nav rail, terminal, boot sequence.
+
+   Everything is namespaced under .bp and uses single-class selectors so
+   nothing here can collide with the main site's cascade (or Mantine's,
+   which leaks in from the /admin bundle).
+   ──────────────────────────────────────────────────────────────────── */
+
+@import './tokens.css';
+
+.bp {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background: var(--bp-void);
+  color: var(--bp-text);
+  font-family: var(--bp-mono);
+  font-size: 13px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  color-scheme: dark;
+}
+
+.bp *,
+.bp *::before,
+.bp *::after { box-sizing: border-box; }
+
+/* Host hooks: the main site paints a coloured body and a fixed gradient wash.
+   While the blueprint is mounted, both are suppressed so nothing bleeds
+   through at the edges or during overscroll. */
+body.bp-host { background: #0a0b0d !important; }
+body.bp-host::before { display: none; }
+
+.bp ::selection { background: var(--bp-cyan); color: var(--bp-void); }
+
+/* Focus is always visible and always the same shape. */
+.bp :focus-visible {
+  outline: 2px solid var(--bp-amber);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+.bp-skip {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 90;
+  padding: 8px 14px;
+  background: var(--bp-amber);
+  color: var(--bp-void);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.bp-skip:focus { left: 8px; }
+
+/* ── CAD grid canvas ───────────────────────────────────────────────── */
+.bp-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+  /* <canvas> is a replaced element: `inset: 0` alone leaves it at its
+     intrinsic 300x150, so the size has to be stated explicitly. */
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Sheet frame: the drawing border ───────────────────────────────── */
+.bp-frame {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  padding: var(--bp-gut);
+}
+
+/* Corner ticks — a drawing frame, not a box. */
+.bp-tick {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--bp-steel);
+  pointer-events: none;
+}
+.bp-tick-tl { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+.bp-tick-tr { top: 10px; right: 10px; border-left: 0; border-bottom: 0; }
+.bp-tick-bl { bottom: 10px; left: 10px; border-right: 0; border-top: 0; }
+.bp-tick-br { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+
+/* ── Titleblock (top rule) ─────────────────────────────────────────── */
+.bp-title {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(10px, 2vw, 26px);
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--bp-line);
+  flex-wrap: wrap;
+}
+
+.bp-title-name {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--bp-cond);
+  font-weight: 600;
+  font-size: clamp(13px, 1.5vw, 16px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bp-text-hi);
+  white-space: nowrap;
+  transition: color 0.16s var(--bp-ease);
+}
+.bp-title-name:hover { color: var(--bp-amber); }
+
+.bp-title-role {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bp-dim);
+  white-space: nowrap;
+}
+
+.bp-title-spacer { flex: 1 1 40px; }
+
+.bp-title-field {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.bp-title-key { color: var(--bp-faint); }
+.bp-title-val { color: var(--bp-text); }
+.bp-title-val-live { color: var(--bp-amber); }
+
+.bp-lang {
+  display: inline-flex;
+  border: 1px solid var(--bp-line-hi);
+  background: transparent;
+  padding: 0;
+  overflow: hidden;
+}
+.bp-lang-opt {
+  border: 0;
+  background: transparent;
+  color: var(--bp-faint);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color 0.16s var(--bp-ease), background 0.16s var(--bp-ease);
+}
+.bp-lang-opt:hover { color: var(--bp-text); }
+.bp-lang-on { background: var(--bp-amber); color: var(--bp-void); font-weight: 600; }
+.bp-lang-on:hover { color: var(--bp-void); }
+
+/* ── Sheet body ────────────────────────────────────────────────────── */
+.bp-body {
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.bp-sheet {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: clamp(16px, 3vh, 34px) 2px clamp(16px, 3vh, 30px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--bp-line-hi) transparent;
+}
+/* Diagram sheets fit rather than scroll: the header keeps its height and the
+   drawing takes the rest of the frame. */
+.bp-sheet-fit {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* The terminal floats over the bottom-right corner. Content steps out of its
+   way rather than hiding under it: the diagram gives up width, scrolling
+   sheets give up trailing height. */
+@media (min-width: 900px) {
+  .bp-sheet-inset { padding-bottom: 190px; }
+  .bp-sheet-fit.bp-sheet-inset { padding-bottom: clamp(16px, 3vh, 30px); padding-right: 458px; }
+}
+
+/* Below the diagram's breakpoint the drawing is replaced by a list, and a
+   list must scroll — fitting it would cut the tail off. */
+@media (max-width: 899px) {
+  .bp-sheet-fit {
+    display: block;
+    overflow-y: auto;
+  }
+}
+
+.bp-sheet::-webkit-scrollbar { width: 8px; }
+.bp-sheet::-webkit-scrollbar-thumb { background: var(--bp-line-hi); }
+.bp-sheet::-webkit-scrollbar-track { background: transparent; }
+
+/* Sheet change reads as a redraw: a wipe, not a slide-and-fade. */
+@keyframes bp-redraw {
+  from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+  to { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+.bp-sheet-enter { animation: bp-redraw 0.34s var(--bp-ease) both; }
+
+/* ── Nav rail (bottom rule) ────────────────────────────────────────── */
+.bp-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--bp-line);
+  flex-wrap: wrap;
+}
+
+.bp-rail { display: flex; gap: 2px; flex-wrap: wrap; }
+
+.bp-rail-btn {
+  position: relative;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--bp-dim);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 4px 9px;
+  cursor: pointer;
+  transition: color 0.16s var(--bp-ease), border-color 0.16s var(--bp-ease);
+}
+.bp-rail-btn:hover { color: var(--bp-text-hi); border-color: var(--bp-line-hi); }
+
+.bp-rail-no {
+  color: var(--bp-faint);
+  margin-right: 6px;
+  font-size: 10px;
+}
+
+.bp-rail-on { color: var(--bp-amber); border-color: var(--bp-amber-dim); }
+.bp-rail-on .bp-rail-no { color: var(--bp-amber); }
+.bp-rail-on:hover { color: var(--bp-amber); border-color: var(--bp-amber-dim); }
+
+.bp-foot-spacer { flex: 1 1 auto; }
+
+.bp-hint {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--bp-faint);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.bp-hint-key {
+  color: var(--bp-dim);
+  border: 1px solid var(--bp-line-hi);
+  padding: 1px 5px;
+  margin: 0 2px;
+}
+
+/* ── Terminal ──────────────────────────────────────────────────────── */
+.bp-term {
+  position: absolute;
+  right: var(--bp-gut);
+  bottom: calc(var(--bp-gut) + 40px);
+  z-index: 20;
+  width: min(430px, calc(100vw - var(--bp-gut) * 2));
+  background: rgba(10, 11, 13, 0.93);
+  backdrop-filter: blur(3px);
+  border: 1px solid var(--bp-line-hi);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 18px 50px -22px #000;
+}
+
+.bp-term-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 9px;
+  border-bottom: 1px solid var(--bp-line);
+  background: var(--bp-panel);
+}
+
+.bp-term-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--bp-amber);
+  flex: 0 0 auto;
+}
+
+.bp-term-name {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bp-dim);
+}
+
+.bp-term-bar-spacer { flex: 1 1 auto; }
+
+.bp-term-close {
+  border: 0;
+  background: transparent;
+  color: var(--bp-faint);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 5px;
+  cursor: pointer;
+}
+.bp-term-close:hover { color: var(--bp-text-hi); }
+
+.bp-term-log {
+  max-height: 210px;
+  overflow-y: auto;
+  padding: 9px;
+  font-size: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bp-line-hi) transparent;
+}
+.bp-term-log::-webkit-scrollbar { width: 6px; }
+.bp-term-log::-webkit-scrollbar-thumb { background: var(--bp-line-hi); }
+
+.bp-term-line { white-space: pre-wrap; word-break: break-word; }
+.bp-term-in { color: var(--bp-text-hi); }
+.bp-term-out { color: var(--bp-dim); }
+.bp-term-err { color: var(--bp-fault); }
+.bp-term-ok { color: var(--bp-cyan); }
+
+.bp-term-form {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border-top: 1px solid var(--bp-line);
+}
+
+.bp-term-ps1 { color: var(--bp-amber); flex: 0 0 auto; }
+
+.bp-term-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--bp-text-hi);
+  font: inherit;
+  padding: 0;
+}
+.bp-term-input:focus { outline: 0; }
+.bp-term-input::placeholder { color: var(--bp-faint); }
+
+.bp-term-launch {
+  position: absolute;
+  right: var(--bp-gut);
+  bottom: calc(var(--bp-gut) + 40px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--bp-line-hi);
+  background: rgba(10, 11, 13, 0.93);
+  color: var(--bp-dim);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 6px 11px;
+  cursor: pointer;
+  transition: color 0.16s var(--bp-ease), border-color 0.16s var(--bp-ease);
+}
+.bp-term-launch:hover { color: var(--bp-amber); border-color: var(--bp-amber-dim); }
+
+/* ── Boot sequence ─────────────────────────────────────────────────── */
+.bp-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bp-void);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--bp-gut);
+  font-family: var(--bp-mono);
+  font-size: clamp(11px, 1.15vw, 13px);
+  color: var(--bp-dim);
+}
+
+.bp-boot-inner { width: min(760px, 100%); margin: 0 auto; }
+
+.bp-boot-head {
+  font-family: var(--bp-cond);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+  border-bottom: 1px solid var(--bp-line);
+  padding-bottom: 7px;
+  margin-bottom: 13px;
+}
+
+.bp-boot-row { display: flex; gap: 10px; white-space: nowrap; }
+.bp-boot-t { color: var(--bp-faint); flex: 0 0 auto; }
+.bp-boot-msg {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--bp-text);
+}
+.bp-boot-st { flex: 0 0 auto; color: var(--bp-cyan); }
+.bp-boot-st-final { color: var(--bp-amber); font-weight: 600; }
+
+.bp-boot-caret {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  background: var(--bp-amber);
+  vertical-align: -2px;
+  animation: bp-blink 1s steps(1, end) infinite;
+}
+@keyframes bp-blink { 50% { opacity: 0; } }
+
+.bp-boot-skip {
+  margin-top: 20px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+.bp-boot-skip:hover { color: var(--bp-dim); }
+
+/* The compile flash: one frame of amber, then gone. */
+@keyframes bp-flash {
+  0% { opacity: 0; }
+  40% { opacity: 0.14; }
+  100% { opacity: 0; }
+}
+.bp-boot-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 61;
+  background: var(--bp-amber);
+  pointer-events: none;
+  animation: bp-flash 0.3s linear both;
+}
+
+@media (max-width: 720px) {
+  .bp { font-size: 12px; }
+  .bp-title-role { display: none; }
+  .bp-hint { display: none; }
+  .bp-term,
+  .bp-term-launch { bottom: calc(var(--bp-gut) + 34px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp *,
+  .bp *::before,
+  .bp *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .bp-sheet-enter { animation: none; }
+  .bp-boot-flash { display: none; }
+}

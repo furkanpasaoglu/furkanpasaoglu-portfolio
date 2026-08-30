@@ -1,0 +1,893 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Sheet content: typography, spec tables, the dependency graph,
+   the trace, tiers, posts, the transmit form, the fault page.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* ── Shared sheet typography ───────────────────────────────────────── */
+.bp-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+  margin-bottom: 11px;
+}
+.bp-eyebrow::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--bp-line);
+  order: 1;
+}
+/* Any trailing count sits after the rule, not jammed against the label. */
+.bp-eyebrow > span { order: 2; }
+
+.bp-h {
+  font-family: var(--bp-cond);
+  font-weight: 600;
+  font-size: clamp(28px, 5.4vw, 62px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  color: var(--bp-text-hi);
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+/* Display-size text answers to the 3:1 threshold, not 4.5:1, so this keeps
+   the darker grey — the gap between the name and the role is the point. */
+.bp-h-sub { color: var(--bp-steel-hi); }
+
+.bp-eyebrow-tight { margin-bottom: 7px; }
+
+/* Diagram sheets: title and instruction share one line. */
+.bp-fit-head {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(12px, 2vw, 24px);
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+
+.bp-h-compact {
+  font-size: clamp(22px, 2.7vw, 36px);
+  margin: 0;
+}
+
+.bp-fit-hint {
+  font-family: var(--bp-sans);
+  font-size: 13px;
+  color: var(--bp-dim);
+  margin: 0;
+  max-width: 58ch;
+}
+
+.bp-lede {
+  font-family: var(--bp-sans);
+  font-size: clamp(14px, 1.5vw, 17px);
+  line-height: 1.62;
+  color: var(--bp-text);
+  max-width: 62ch;
+  margin: 0 0 18px;
+}
+
+.bp-p {
+  font-family: var(--bp-sans);
+  font-size: 14px;
+  line-height: 1.68;
+  color: var(--bp-dim);
+  max-width: 68ch;
+  margin: 0 0 12px;
+}
+
+.bp-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: clamp(20px, 4vw, 54px);
+  align-items: start;
+}
+
+.bp-loading,
+.bp-empty {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--bp-faint);
+  padding: 22px 0;
+}
+
+/* ── Spec table — reads like a drawing's parts list ────────────────── */
+.bp-spec { border-top: 1px solid var(--bp-line); margin-top: 4px; }
+
+.bp-spec-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 22%) 1fr;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bp-line);
+  align-items: baseline;
+}
+
+.bp-spec-k {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+}
+.bp-spec-v { color: var(--bp-text); word-break: break-word; }
+
+.bp-link {
+  color: var(--bp-cyan);
+  text-decoration: none;
+  border-bottom: 1px solid var(--bp-cyan-dim);
+  transition: border-color 0.16s var(--bp-ease);
+}
+.bp-link:hover { border-bottom-color: var(--bp-cyan); }
+
+/* ── Signature: the dependency graph ───────────────────────────────── */
+/* The diagram fills whatever box the sheet leaves it and is fitted with
+   `meet`, so it scales down instead of scrolling. */
+.bp-graph-wrap {
+  position: relative;
+  margin-top: 6px;
+  flex: 1 1 auto;
+  min-height: 240px;
+}
+
+.bp-graph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.bp-gwire {
+  fill: none;
+  stroke: var(--bp-steel);
+  stroke-width: 1;
+  opacity: 0.34;
+  transition: opacity 0.22s var(--bp-ease), stroke 0.22s var(--bp-ease);
+}
+
+@keyframes bp-trace-in {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.bp-gwire-live {
+  stroke: var(--bp-cyan);
+  stroke-width: 1.4;
+  opacity: 1;
+  stroke-dasharray: 1;
+  animation: bp-trace-in 0.44s var(--bp-ease) both;
+}
+
+.bp-gwire-mute { opacity: 0.08; }
+
+.bp-gjoint { fill: var(--bp-cyan); }
+
+.bp-gnode { cursor: pointer; }
+
+.bp-gnode-box {
+  fill: var(--bp-panel);
+  stroke: var(--bp-line-hi);
+  stroke-width: 1;
+  transition: stroke 0.2s var(--bp-ease), fill 0.2s var(--bp-ease);
+}
+.bp-gnode:hover .bp-gnode-box,
+.bp-gnode-live .bp-gnode-box { stroke: var(--bp-amber); fill: var(--bp-panel-hi); }
+.bp-gnode-mute .bp-gnode-box { stroke: var(--bp-line); }
+
+.bp-gnode-bar { fill: var(--bp-steel); transition: fill 0.2s var(--bp-ease); }
+.bp-gnode-live .bp-gnode-bar { fill: var(--bp-amber); }
+
+.bp-gnode-title {
+  font-family: var(--bp-cond);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  fill: var(--bp-text);
+  transition: fill 0.2s var(--bp-ease);
+}
+.bp-gnode:hover .bp-gnode-title,
+.bp-gnode-live .bp-gnode-title { fill: var(--bp-text-hi); }
+.bp-gnode-mute .bp-gnode-title { fill: var(--bp-steel-hi); }
+
+.bp-gnode-meta {
+  font-family: var(--bp-mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  fill: var(--bp-faint);
+}
+
+/* The dependency count sits in the box's empty right half — real information
+   filling space that would otherwise just be room. */
+.bp-gnode-count {
+  font-family: var(--bp-mono);
+  font-size: 15px;
+  fill: var(--bp-faint);
+  transition: fill 0.2s var(--bp-ease);
+}
+.bp-gnode-live .bp-gnode-count { fill: var(--bp-cyan); }
+
+.bp-gtech-bg { fill: var(--bp-void); }
+
+.bp-gtech-label {
+  font-family: var(--bp-mono);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  fill: var(--bp-dim);
+  transition: fill 0.2s var(--bp-ease);
+}
+.bp-gtech-live .bp-gtech-label { fill: var(--bp-amber); }
+/* Muting is a transient focus state, not a resting one — the same step down
+   as a muted component title, so the two read as one treatment. */
+.bp-gtech-mute .bp-gtech-label { fill: var(--bp-steel-hi); }
+
+.bp-gtech-pin {
+  fill: none;
+  stroke: var(--bp-steel);
+  stroke-width: 1;
+  transition: stroke 0.2s var(--bp-ease), fill 0.2s var(--bp-ease);
+}
+.bp-gtech-live .bp-gtech-pin { fill: var(--bp-amber); stroke: var(--bp-amber); }
+.bp-gtech-mute .bp-gtech-pin { stroke: var(--bp-line-hi); }
+
+/* Column headers. The wide tracking and uppercase already set these apart
+   from the data below, so they can carry enough contrast to actually be
+   read — at 9px in --bp-steel they were effectively invisible. */
+.bp-glabel {
+  font-family: var(--bp-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  fill: var(--bp-dim);
+}
+
+.bp-grule { stroke: var(--bp-line); stroke-width: 1; }
+
+/* Narrow screens: the diagram becomes a list, same semantics. */
+.bp-glist { display: grid; gap: 1px; background: var(--bp-line); border: 1px solid var(--bp-line); }
+
+.bp-glist-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--bp-panel);
+  border: 0;
+  border-left: 2px solid var(--bp-steel);
+  color: inherit;
+  font: inherit;
+  padding: 12px 13px;
+  cursor: pointer;
+  transition: border-color 0.16s var(--bp-ease), background 0.16s var(--bp-ease);
+}
+.bp-glist-item:hover { background: var(--bp-panel-hi); border-left-color: var(--bp-amber); }
+
+.bp-glist-title {
+  font-family: var(--bp-cond);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--bp-text-hi);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.bp-glist-meta {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+  display: block;
+  margin-bottom: 7px;
+}
+
+.bp-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.bp-chip {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--bp-dim);
+  border: 1px solid var(--bp-line-hi);
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.bp-chip-live { color: var(--bp-amber); border-color: var(--bp-amber-dim); }
+
+/* ── Detail panel — slides over the sheet, not a modal blur ────────── */
+.bp-detail {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  background: var(--bp-void);
+  border-left: 1px solid var(--bp-line-hi);
+  overflow-y: auto;
+  padding: clamp(16px, 3vh, 30px) clamp(14px, 2.6vw, 32px);
+  animation: bp-redraw 0.3s var(--bp-ease) both;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bp-line-hi) transparent;
+}
+@media (min-width: 900px) { .bp-detail { left: 34%; } }
+
+.bp-detail-top {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  border-bottom: 1px solid var(--bp-line);
+  padding-bottom: 9px;
+  margin-bottom: 16px;
+}
+
+.bp-detail-no {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--bp-faint);
+}
+
+.bp-x {
+  margin-left: auto;
+  border: 1px solid var(--bp-line-hi);
+  background: transparent;
+  color: var(--bp-dim);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: color 0.16s var(--bp-ease), border-color 0.16s var(--bp-ease);
+}
+.bp-x:hover { color: var(--bp-amber); border-color: var(--bp-amber-dim); }
+
+/* ── Trace (experience) — order genuinely carries meaning here ─────── */
+.bp-trace-group + .bp-trace-group { margin-top: 30px; }
+
+.bp-trace { border-top: 1px solid var(--bp-line); }
+
+.bp-trace-row {
+  display: grid;
+  grid-template-columns: minmax(84px, 15%) 1fr;
+  gap: clamp(12px, 2.4vw, 28px);
+  padding: 15px 0;
+  border-bottom: 1px solid var(--bp-line);
+}
+
+.bp-trace-when {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--bp-amber);
+  white-space: nowrap;
+}
+
+.bp-trace-kind {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+  margin-top: 4px;
+}
+
+.bp-trace-title {
+  font-family: var(--bp-cond);
+  font-size: clamp(17px, 2.2vw, 22px);
+  font-weight: 600;
+  color: var(--bp-text-hi);
+  margin: 0 0 2px;
+  line-height: 1.15;
+}
+
+.bp-trace-org {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bp-cyan);
+  margin-bottom: 8px;
+}
+
+/* ── The branch ────────────────────────────────────────────────────────
+   A role and what came out of it is a real parent/child relation, so it
+   is drawn as one: a trunk with an elbow per child, last child closing
+   the trunk. Grey linework, because in this design colour means state
+   (amber) or data flow (cyan) — a hierarchy is neither. */
+.bp-branch {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+
+.bp-twig {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 7px;
+  font-family: var(--bp-sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--bp-dim);
+  max-width: 76ch;
+}
+.bp-twig:last-child { margin-bottom: 0; }
+
+/* Trunk. Runs past the row to bridge the gap to the next child. */
+.bp-twig::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 0;
+  bottom: -7px;
+  width: 1px;
+  background: var(--bp-steel-hi);
+}
+/* Reaches up into the description above, so the tree has a visible root. */
+.bp-twig:first-child::before { top: -12px; }
+/* Last child closes the trunk at its own elbow. */
+.bp-twig:last-child::before { bottom: auto; height: 0.82em; }
+
+/* Elbow. */
+.bp-twig::after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 0.82em;
+  width: 14px;
+  height: 1px;
+  background: var(--bp-steel-hi);
+}
+
+.bp-twig-tech { padding-top: 3px; }
+
+/* ── Core view (skills) ────────────────────────────────────────────────
+   Three curated domains as sectors, three grades as rings, read from the
+   centre out. Everything the diagram shows is stored data.
+
+   Grade is drawn in one hue throughout: the ring deepens toward the core
+   and the marker goes filled → outlined → dashed. No grey step — grey here
+   is linework, and a grade is not linework. */
+.bp-core {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 40px);
+  margin-top: 12px;
+}
+@media (min-width: 1000px) {
+  .bp-core {
+    grid-template-columns: minmax(0, 620px) minmax(280px, 1fr);
+    align-items: start;
+  }
+}
+
+.bp-core-figure { min-width: 0; }
+
+.bp-core-svg { display: block; width: 100%; max-width: 600px; height: auto; }
+
+.bp-core-cell { cursor: pointer; }
+.bp-core-cell-empty { cursor: default; }
+
+.bp-core-arc {
+  stroke: var(--bp-line-hi);
+  stroke-width: 1;
+  transition: fill 0.16s var(--bp-ease), stroke 0.16s var(--bp-ease), opacity 0.16s var(--bp-ease);
+}
+.bp-core-cell-core .bp-core-arc { fill: var(--bp-amber-strong); }
+.bp-core-cell-working .bp-core-arc { fill: var(--bp-amber-mid); }
+.bp-core-cell-empty .bp-core-arc { fill: transparent; stroke: var(--bp-line); }
+.bp-core-cell:hover .bp-core-arc,
+.bp-core-cell-live .bp-core-arc { stroke: var(--bp-amber); }
+.bp-core-cell-mute .bp-core-arc { opacity: 0.26; }
+
+.bp-core-num {
+  font-family: var(--bp-mono);
+  font-size: 14px;
+  fill: var(--bp-text);
+  pointer-events: none;
+}
+.bp-core-cell-live .bp-core-num { fill: var(--bp-text-hi); }
+.bp-core-cell-mute .bp-core-num { opacity: 0.26; }
+
+.bp-core-sector {
+  font-family: var(--bp-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: var(--bp-dim);
+}
+
+.bp-core-hub { fill: var(--bp-void); stroke: var(--bp-amber); stroke-width: 1; }
+.bp-core-hub-num {
+  font-family: var(--bp-cond);
+  font-size: 20px;
+  font-weight: 600;
+  fill: var(--bp-text-hi);
+}
+.bp-core-hub-label {
+  font-family: var(--bp-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  fill: var(--bp-faint);
+}
+
+/* Domain key: a bigger hit target than a thin arc, and the only place the
+   sector names survive once the rim labels are dropped on narrow screens. */
+.bp-core-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.bp-core-key-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--bp-line-hi);
+  background: transparent;
+  color: var(--bp-dim);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: color 0.16s var(--bp-ease), border-color 0.16s var(--bp-ease);
+}
+.bp-core-key-btn:hover { color: var(--bp-text-hi); }
+.bp-core-key-on { color: var(--bp-amber); border-color: var(--bp-amber); }
+.bp-core-key-on:hover { color: var(--bp-amber); }
+.bp-core-key-num { color: var(--bp-faint); }
+.bp-core-key-on .bp-core-key-num { color: var(--bp-amber); }
+
+.bp-core-panel { min-width: 0; }
+
+.bp-core-list { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.bp-core-note {
+  margin: 16px 0 0;
+  font-family: var(--bp-sans);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--bp-faint);
+  max-width: 48ch;
+}
+
+/* ── Capability chips + legend ─────────────────────────────────────── */
+.bp-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--bp-line-hi);
+  background: var(--bp-panel);
+  color: var(--bp-text);
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 11px;
+}
+.bp-cell-static { cursor: default; }
+
+/* Filled means owned, outlined means worked with. One hue, two states. */
+.bp-cell-mark { width: 7px; height: 7px; flex: 0 0 auto; }
+.bp-cell-mark-core { background: var(--bp-amber); }
+.bp-cell-mark-working { border: 1px solid var(--bp-amber); }
+
+.bp-core-foot {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--bp-line);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+}
+
+.bp-legend { display: inline-flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.bp-legend-item { display: inline-flex; align-items: center; gap: 7px; }
+
+.bp-readout { margin-left: auto; color: var(--bp-dim); }
+
+@media (max-width: 720px) {
+  /* Rim labels shrink below legibility with the SVG; the key carries them. */
+  .bp-core-sector { display: none; }
+  .bp-readout { margin-left: 0; }
+}
+
+/* ── Posts (blog) ──────────────────────────────────────────────────── */
+.bp-posts { border-top: 1px solid var(--bp-line); }
+
+.bp-post {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--bp-line);
+  color: inherit;
+  font: inherit;
+  padding: 14px 10px 14px 0;
+  cursor: pointer;
+  transition: background 0.16s var(--bp-ease), padding-left 0.16s var(--bp-ease);
+}
+.bp-post:hover { background: var(--bp-panel); padding-left: 10px; }
+
+.bp-post-top {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+
+.bp-post-date { font-size: 10px; letter-spacing: 0.12em; color: var(--bp-amber); }
+.bp-post-cat {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+}
+.bp-post-read { font-size: 10px; color: var(--bp-faint); margin-left: auto; }
+
+.bp-post-title {
+  font-family: var(--bp-cond);
+  font-size: clamp(16px, 2vw, 21px);
+  font-weight: 600;
+  color: var(--bp-text-hi);
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.bp-post-ex {
+  font-family: var(--bp-sans);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--bp-dim);
+  max-width: 74ch;
+  margin: 0;
+}
+
+/* ── Transmit (contact) ────────────────────────────────────────────── */
+.bp-form { max-width: 520px; }
+
+.bp-field { margin-bottom: 13px; }
+
+.bp-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bp-faint);
+  margin-bottom: 5px;
+}
+
+.bp-input,
+.bp-textarea {
+  width: 100%;
+  background: var(--bp-panel);
+  border: 1px solid var(--bp-line-hi);
+  color: var(--bp-text-hi);
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 11px;
+  transition: border-color 0.16s var(--bp-ease);
+}
+.bp-input:focus,
+.bp-textarea:focus { border-color: var(--bp-amber); outline: 0; }
+.bp-textarea { resize: vertical; min-height: 116px; line-height: 1.6; }
+
+.bp-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.bp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--bp-amber);
+  background: transparent;
+  color: var(--bp-amber);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background 0.16s var(--bp-ease), color 0.16s var(--bp-ease);
+}
+.bp-btn:hover:not(:disabled) { background: var(--bp-amber); color: var(--bp-void); }
+.bp-btn:disabled { opacity: 0.42; cursor: not-allowed; }
+
+.bp-status { font-size: 12px; margin-top: 11px; line-height: 1.5; }
+.bp-status-ok { color: var(--bp-cyan); }
+.bp-status-err { color: var(--bp-fault); }
+
+/* ── Fault sheet ───────────────────────────────────────────────────── */
+.bp-fault-wrap { max-width: 760px; }
+
+.bp-fault-kind {
+  font-family: var(--bp-cond);
+  font-size: clamp(22px, 4vw, 40px);
+  font-weight: 600;
+  color: var(--bp-fault);
+  margin: 0 0 10px;
+  line-height: 1.05;
+  word-break: break-word;
+}
+
+.bp-fault-msg {
+  font-family: var(--bp-sans);
+  font-size: 15px;
+  line-height: 1.62;
+  color: var(--bp-text);
+  margin: 0 0 20px;
+  max-width: 62ch;
+}
+
+.bp-stack {
+  background: var(--bp-panel);
+  border: 1px solid var(--bp-line);
+  border-left: 2px solid var(--bp-fault);
+  padding: 12px 14px;
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: var(--bp-faint);
+  overflow-x: auto;
+  margin: 0 0 22px;
+}
+.bp-stack-hi { color: var(--bp-dim); }
+
+@media (max-width: 720px) {
+  .bp-trace-row { grid-template-columns: 1fr; gap: 6px; }
+  .bp-spec-row { grid-template-columns: 1fr; gap: 2px; }
+  .bp-detail { left: 0; }
+}
+
+/* ── Rendered description ──────────────────────────────────────────────
+   Stored as a document, printed as sheet prose. The classes come from
+   utils/richDoc.jsx; the type scale is the sheet's, not the editor's. */
+.bp-doc > :last-child { margin-bottom: 0; }
+
+.bp-doc .rt-p {
+  font-family: var(--bp-sans);
+  font-size: 14px;
+  line-height: 1.68;
+  color: var(--bp-dim);
+  max-width: 68ch;
+  margin: 0 0 12px;
+}
+
+.bp-doc .rt-h {
+  font-family: var(--bp-cond);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bp-text-hi);
+  margin: 18px 0 8px;
+}
+
+.bp-doc .rt-ul,
+.bp-doc .rt-ol { list-style: none; padding: 0; margin: 0 0 16px; }
+
+.bp-doc .rt-li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 7px;
+  font-family: var(--bp-sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--bp-dim);
+  max-width: 76ch;
+}
+.bp-doc .rt-li > .rt-p { font-size: inherit; margin: 0; }
+
+.bp-doc .rt-ul > .rt-li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 9px;
+  height: 1px;
+  background: var(--bp-cyan);
+}
+
+/* Numbered lists keep their number — it is the content, not decoration. */
+.bp-doc .rt-ol { counter-reset: rt; }
+.bp-doc .rt-ol > .rt-li { counter-increment: rt; }
+.bp-doc .rt-ol > .rt-li::before {
+  content: counter(rt) '.';
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--bp-mono);
+  font-size: 11px;
+  line-height: 1.95;
+  color: var(--bp-amber-mid);
+}
+
+.bp-doc .rt-quote {
+  margin: 0 0 14px;
+  padding-left: 14px;
+  border-left: 1px solid var(--bp-amber-dim);
+  color: var(--bp-text);
+  font-family: var(--bp-sans);
+  font-size: 14px;
+  line-height: 1.62;
+  max-width: 68ch;
+}
+
+.bp-doc .rt-pre {
+  font-family: var(--bp-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  background: var(--bp-panel-hi);
+  border: 1px solid var(--bp-line-hi);
+  padding: 10px 12px;
+  margin: 0 0 14px;
+  overflow-x: auto;
+  color: var(--bp-text);
+}
+
+.bp-doc .rt-hr { border: 0; border-top: 1px solid var(--bp-line-hi); margin: 18px 0; }
+
+/* Inside a twig the document is the branch's label, so it carries no
+   spacing and no bullet of its own — the elbow already marks it. */
+.bp-doc-tight .rt-p { margin: 0; font-size: inherit; color: inherit; max-width: none; }
+
+/* Inline marks. */
+.rt-code {
+  font-family: var(--bp-mono);
+  font-size: 0.92em;
+  background: var(--bp-panel-hi);
+  border: 1px solid var(--bp-line-hi);
+  padding: 1px 5px;
+  color: var(--bp-text-hi);
+}
+
+.rt-link {
+  color: var(--bp-cyan);
+  text-decoration: none;
+  border-bottom: 1px solid var(--bp-cyan-dim);
+}
+.rt-link:hover { border-bottom-color: var(--bp-cyan); }
+
+/* A note is long-form reading, not a spec sheet: bigger measure and scale
+   than the default document, and the two block types the old editor had
+   keep their own colour — cyan for code, amber for a call-out. */
+.bp-doc-note .rt-p {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--bp-text);
+  max-width: 70ch;
+  margin: 0 0 14px;
+}
+
+.bp-doc-note .rt-h {
+  font-family: var(--bp-cond);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--bp-text-hi);
+  margin: 22px 0 9px;
+}
+
+.bp-doc-note .rt-pre {
+  background: var(--bp-panel);
+  border: 1px solid var(--bp-line);
+  border-left: 2px solid var(--bp-cyan);
+  padding: 12px 14px;
+  margin: 0 0 16px;
+}
+
+.bp-doc-note .rt-quote {
+  border-left: 2px solid var(--bp-amber);
+  background: var(--bp-amber-dim);
+  padding: 10px 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--bp-text);
+  margin: 0 0 16px;
+  max-width: 70ch;
+}
+.bp-doc-note .rt-quote > .rt-p { font-size: inherit; color: inherit; margin: 0; }
+

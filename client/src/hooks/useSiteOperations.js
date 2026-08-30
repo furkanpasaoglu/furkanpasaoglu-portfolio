@@ -7,10 +7,9 @@ const DEFAULT_OPS = {
   maintenanceMode: false,
   maintenanceMessage_tr: '',
   maintenanceMessage_en: '',
-  sectionsEnabled: {
-    hero: true, about: true, skills: true,
-    projects: true, experience: true, blog: true, contact: true,
-  },
+  // Empty on purpose: a key that is absent counts as visible, so a settings
+  // row written before a sheet existed never hides it.
+  sectionsEnabled: {},
   analytics: { enabled: false, ga4MeasurementId: '', gtmContainerId: '' },
 };
 
@@ -30,7 +29,7 @@ export function useSiteOperations() {
   return {
     ...DEFAULT_OPS,
     ...data.operations,
-    sectionsEnabled: { ...DEFAULT_OPS.sectionsEnabled, ...(data.operations.sectionsEnabled ?? {}) },
+    sectionsEnabled: data.operations.sectionsEnabled ?? {},
     analytics: { ...DEFAULT_OPS.analytics, ...(data.operations.analytics ?? {}) },
   };
 }
