@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Portfolio.Api.Domain;
 
 public class Experience
@@ -24,6 +26,9 @@ public class ExperienceLocale
     public string Title { get; set; } = string.Empty;
     public string Company { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;  // "Full-time" / "Eğitim"
-    public string Desc { get; set; } = string.Empty;
+    // Rich document; a legacy plain string still deserialises into JsonElement.
+    public JsonElement Desc { get; set; }
+
+    /// <summary>Same story as ProjectLocale.Highlights: still read, never written.</summary>
     public List<string> Highlights { get; set; } = new();
 }

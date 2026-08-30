@@ -11,7 +11,7 @@ public class ExperienceLocaleValidator : AbstractValidator<ExperienceLocale>
         RuleFor(x => x.Title).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Company).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Type).NotEmpty().MaximumLength(64);
-        RuleFor(x => x.Desc).NotEmpty();
+        RuleFor(x => x.Desc).RichDocument();
         RuleForEach(x => x.Highlights).NotEmpty().MaximumLength(400);
     }
 }

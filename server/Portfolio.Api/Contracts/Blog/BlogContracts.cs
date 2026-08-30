@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Portfolio.Api.Domain;
 
 namespace Portfolio.Api.Contracts.Blog;
@@ -15,7 +16,7 @@ public record BlogPostPublicDto(
     string Excerpt,
     string Date,
     int ReadTime,
-    List<BlogBlock>? Content); // null for list view, populated for detail
+    JsonElement? Content); // null for list view, populated for detail
 
 public record BlogPostAdminDto(
     int Id,
@@ -29,8 +30,8 @@ public record BlogPostAdminDto(
     List<string> Tags,
     BlogPostLocale DataTr,
     BlogPostLocale DataEn,
-    List<BlogBlock> ContentTr,
-    List<BlogBlock> ContentEn,
+    JsonElement ContentTr,
+    JsonElement ContentEn,
     DateTime UpdatedAt);
 
 public record BlogPostListItemDto(
@@ -56,5 +57,5 @@ public record BlogPostUpsertDto(
     List<string> Tags,
     BlogPostLocale DataTr,
     BlogPostLocale DataEn,
-    List<BlogBlock> ContentTr,
-    List<BlogBlock> ContentEn);
+    JsonElement ContentTr,
+    JsonElement ContentEn);

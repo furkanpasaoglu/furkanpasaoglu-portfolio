@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Portfolio.Api.Domain;
 
 namespace Portfolio.Api.Contracts.Experience;
@@ -11,7 +12,7 @@ public record ExperiencePublicDto(
     string Title,
     string Company,
     string Type,
-    string Desc,
+    JsonElement Desc,
     List<string> Highlights);
 
 public record ExperienceAdminDto(

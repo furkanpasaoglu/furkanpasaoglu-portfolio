@@ -4,20 +4,6 @@ using Portfolio.Api.Domain;
 
 namespace Portfolio.Api.Validators;
 
-public class BlogBlockValidator : AbstractValidator<BlogBlock>
-{
-    private static readonly string[] AllowedTypes = { "paragraph", "heading", "code", "note" };
-
-    public BlogBlockValidator()
-    {
-        RuleFor(x => x.Type)
-            .NotEmpty()
-            .Must(t => AllowedTypes.Contains(t))
-            .WithMessage("Block type must be one of: paragraph, heading, code, note.");
-        RuleFor(x => x.Lang).MaximumLength(32);
-    }
-}
-
 public class BlogPostLocaleValidator : AbstractValidator<BlogPostLocale>
 {
     public BlogPostLocaleValidator()
@@ -40,7 +26,8 @@ public class BlogPostUpsertValidator : AbstractValidator<BlogPostUpsertDto>
         RuleForEach(x => x.Tags).NotEmpty().MaximumLength(64);
         RuleFor(x => x.DataTr).NotNull().SetValidator(new BlogPostLocaleValidator());
         RuleFor(x => x.DataEn).NotNull().SetValidator(new BlogPostLocaleValidator());
-        RuleForEach(x => x.ContentTr).SetValidator(new BlogBlockValidator());
-        RuleForEach(x => x.ContentEn).SetValidator(new BlogBlockValidator());
+        // The body is the note; publishing an empty one is always a mistake.
+        RuleFor(x => x.ContentTr).RichDocument();
+        RuleFor(x => x.ContentEn).RichDocument();
     }
 }

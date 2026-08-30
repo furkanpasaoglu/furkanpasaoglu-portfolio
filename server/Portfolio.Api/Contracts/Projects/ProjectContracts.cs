@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Portfolio.Api.Domain;
 
 namespace Portfolio.Api.Contracts.Projects;
@@ -13,7 +14,7 @@ public record ProjectPublicDto(
     List<string> Tags,
     string Title,
     string ShortDesc,
-    string LongDesc,
+    JsonElement LongDesc,
     string Status,
     string? Client,
     List<string> Highlights);
