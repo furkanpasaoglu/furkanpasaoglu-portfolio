@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { BANDS, BAND_LABEL, useSkillModel } from '../skillModel';
+import { TIERS, TIER_LABEL, useSkillModel } from '../skillModel';
 import CoreView from './skills/CoreView';
 
 /**
- * Capability, read from the centre out: one sector per domain, two rings for
- * the two bands. Both the domains and their order come from the API, so the
- * sheet does not care how many there are.
+ * Capability, read from the centre out: one sector per domain, one ring per
+ * grade. Both the domains and their order come from the API, so the sheet
+ * does not care how many there are.
  */
 export default function SkillsSheet({ lang }) {
   const tr = lang === 'tr';
@@ -31,7 +31,7 @@ export default function SkillsSheet({ lang }) {
         {/* Structure only — the panel carries the reading of it, and saying
             it in both places would just be the same sentence twice. */}
         <p className="bp-fit-hint">
-          {tr ? 'Her dilim bir alan, iki halka.' : 'One sector per domain, two rings.'}
+          {tr ? 'Her dilim bir alan, her halka bir kademe.' : 'One sector per domain, one ring per grade.'}
         </p>
       </div>
 
@@ -48,10 +48,10 @@ export default function SkillsSheet({ lang }) {
       {total > 0 && (
         <div className="bp-core-foot">
           <span className="bp-legend">
-            {BANDS.map((band) => (
-              <span className="bp-legend-item" key={band}>
-                <span className={`bp-cell-mark bp-cell-mark-${band}`} />
-                {BAND_LABEL[tr ? 'tr' : 'en'][band]}
+            {TIERS.map((tier) => (
+              <span className="bp-legend-item" key={tier}>
+                <span className={`bp-cell-mark bp-cell-mark-${tier}`} />
+                {TIER_LABEL[tr ? 'tr' : 'en'][tier]}
               </span>
             ))}
           </span>

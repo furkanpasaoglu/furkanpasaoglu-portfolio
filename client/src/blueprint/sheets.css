@@ -469,8 +469,9 @@
   stroke-width: 1;
   transition: fill 0.16s var(--bp-ease), stroke 0.16s var(--bp-ease), opacity 0.16s var(--bp-ease);
 }
-.bp-core-cell-core .bp-core-arc { fill: var(--bp-amber-strong); }
-.bp-core-cell-working .bp-core-arc { fill: var(--bp-amber-mid); }
+.bp-core-cell-expert .bp-core-arc { fill: var(--bp-amber-strong); }
+.bp-core-cell-proficient .bp-core-arc { fill: var(--bp-amber-dim); }
+.bp-core-cell-familiar .bp-core-arc { fill: var(--bp-amber-mid); }
 .bp-core-cell-empty .bp-core-arc { fill: transparent; stroke: var(--bp-line); }
 .bp-core-cell:hover .bp-core-arc,
 .bp-core-cell-live .bp-core-arc { stroke: var(--bp-amber); }
@@ -567,8 +568,9 @@
 
 /* Filled means owned, outlined means worked with. One hue, two states. */
 .bp-cell-mark { width: 7px; height: 7px; flex: 0 0 auto; }
-.bp-cell-mark-core { background: var(--bp-amber); }
-.bp-cell-mark-working { border: 1px solid var(--bp-amber); }
+.bp-cell-mark-expert { background: var(--bp-amber); }
+.bp-cell-mark-proficient { background: var(--bp-amber); opacity: 0.45; }
+.bp-cell-mark-familiar { border: 1px solid var(--bp-amber); }
 
 .bp-core-foot {
   display: flex;

@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { BAND_LABEL } from '../../skillModel';
+import { TIER_LABEL } from '../../skillModel';
 
 /**
- * A polar reading of the same data: one sector per domain, two rings for the
- * two bands, centre outward. What you own is at the core; what you have only
- * touched sits on the rim. The sector count follows the data.
+ * A polar reading of the same data: one sector per domain, one ring per
+ * grade, centre outward. What is held best sits at the core and what has only
+ * been tried sits on the rim, so the shape of a domain is legible before a
+ * single name is read. Both counts follow the data.
  *
  * Skill names are deliberately NOT set around the rings — radial type is
  * unreadable at this size. The diagram carries the shape of the data and the
@@ -16,11 +17,12 @@ const VB_H = 530;
 const CX = 380;
 const CY = 262;
 const HUB = 34;
-/* Two rings, because the reader's question is binary: owned, or worked with.
-   The stored grades stay three — this is a reading, not a migration. */
+/* One ring per stored grade, of roughly equal thickness. The outer rings
+   carry more area, which suits them — the further out, the more items. */
 const RINGS = [
-  { band: 'core', r0: HUB, r1: 130 },
-  { band: 'working', r0: 130, r1: 226 },
+  { tier: 'expert', r0: HUB, r1: 100 },
+  { tier: 'proficient', r0: 100, r1: 164 },
+  { tier: 'familiar', r0: 164, r1: 226 },
 ];
 
 const polar = (r, deg) => {
@@ -63,11 +65,11 @@ export default function CoreView({ model, lang, active, onActive }) {
   // The panel shows the focused cell, else the focused domain, else the core.
   const shown = useMemo(() => {
     if (cellKey) {
-      const [catId, band] = cellKey.split('|');
+      const [catId, tier] = cellKey.split('|');
       const cat = categories.find((c) => String(c.id) === catId);
       return {
-        title: `${cat?.title ?? ''} · ${BAND_LABEL[tr ? 'tr' : 'en'][band]}`,
-        items: (cat?.items ?? []).filter((s) => s.band === band),
+        title: `${cat?.title ?? ''} · ${TIER_LABEL[tr ? 'tr' : 'en'][tier]}`,
+        items: (cat?.items ?? []).filter((s) => s.tier === tier),
       };
     }
     if (active !== null) {
@@ -93,8 +95,8 @@ export default function CoreView({ model, lang, active, onActive }) {
         {sectors.map((sector) => (
           <g key={sector.id}>
             {RINGS.map((ring) => {
-              const items = sector.items.filter((s) => s.band === ring.band);
-              const key = `${sector.id}|${ring.band}`;
+              const items = sector.items.filter((s) => s.tier === ring.tier);
+              const key = `${sector.id}|${ring.tier}`;
               const live = cellKey === key || (cellKey === null && active === sector.id);
               const mute = (cellKey !== null && cellKey !== key)
                 || (cellKey === null && active !== null && active !== sector.id);
@@ -103,12 +105,12 @@ export default function CoreView({ model, lang, active, onActive }) {
               return (
                 <g
                   key={key}
-                  className={`bp-core-cell bp-core-cell-${ring.band}`
+                  className={`bp-core-cell bp-core-cell-${ring.tier}`
                     + `${live ? ' bp-core-cell-live' : ''}${mute ? ' bp-core-cell-mute' : ''}`
                     + `${items.length === 0 ? ' bp-core-cell-empty' : ''}`}
                   tabIndex={items.length > 0 ? 0 : undefined}
                   role={items.length > 0 ? 'button' : undefined}
-                  aria-label={`${sector.title} — ${BAND_LABEL[tr ? 'tr' : 'en'][ring.band]} — ${items.length}`}
+                  aria-label={`${sector.title} — ${TIER_LABEL[tr ? 'tr' : 'en'][ring.tier]} — ${items.length}`}
                   onMouseEnter={() => { if (items.length) { setCellKey(key); onActive(sector.id); } }}
                   onMouseLeave={() => { setCellKey(null); onActive(null); }}
                   onFocus={() => { if (items.length) { setCellKey(key); onActive(sector.id); } }}
@@ -176,7 +178,7 @@ export default function CoreView({ model, lang, active, onActive }) {
         <div className="bp-core-list">
           {shown.items.map((skill) => (
             <span className="bp-cell bp-cell-static" key={`${skill.name}-${skill.categoryId}`}>
-              <span className={`bp-cell-mark bp-cell-mark-${skill.band}`} aria-hidden="true" />
+              <span className={`bp-cell-mark bp-cell-mark-${skill.tier}`} aria-hidden="true" />
               {skill.name}
             </span>
           ))}
@@ -184,8 +186,8 @@ export default function CoreView({ model, lang, active, onActive }) {
 
         <p className="bp-core-note">
           {tr
-            ? 'Merkez sahiplendiğim, dış halka değdiğim. Bir dilime gel, adları burada listelenir.'
-            : 'The centre is what I own, the rim is what I have touched. Hover a segment and its names land here.'}
+            ? 'İçten dışa üç halka: İleri, Yetkin, Aşina. Bir dilime gel, adları burada listelenir.'
+            : 'Three rings from the centre out: expert, proficient, familiar. Hover a segment and its names land here.'}
         </p>
       </aside>
     </div>

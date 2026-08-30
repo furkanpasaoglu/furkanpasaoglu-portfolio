@@ -4,24 +4,20 @@ import { usePublicSkills } from '../hooks/usePublicData';
 /**
  * One reading of the skills data for the capability sheet.
  *
- * The API stores three grades (expert / proficient / familiar) and the admin
- * panel keeps recording all three — nothing was migrated away. The public
- * sheet shows two, because the question a reader is actually asking is
- * binary: did he own this, or has he only worked with it? Collapsing
- * proficient and familiar into one band answers that without over-claiming
- * either of them, and it matches what the diagram says: centre and rim.
+ * The API records three grades and the sheet shows all three, as three rings
+ * outward from the hub. The grades are the whole point of the diagram: a
+ * reader wants to know not only what is there but how well it is held, and
+ * the middle grade is the one most people actually hire for.
  */
 
-export const BANDS = ['core', 'working'];
+export const TIERS = ['expert', 'proficient', 'familiar'];
 
-export const BAND_LABEL = {
-  tr: { core: 'İleri', working: 'Kullandım' },
-  en: { core: 'Expert', working: 'Worked with' },
+export const TIER_LABEL = {
+  tr: { expert: 'İleri', proficient: 'Yetkin', familiar: 'Aşina' },
+  en: { expert: 'Expert', proficient: 'Proficient', familiar: 'Familiar' },
 };
 
-const bandOf = (tier) => (tier === 'expert' ? 'core' : 'working');
-
-const TIER_ORDER = { expert: 0, proficient: 1, familiar: 2 };
+const TIER_ORDER = Object.fromEntries(TIERS.map((t, i) => [t, i]));
 
 export function useSkillModel(lang) {
   const { data, isLoading, isError } = usePublicSkills(lang);
@@ -36,7 +32,6 @@ export function useSkillModel(lang) {
         flat.push({
           name: skill.name,
           tier: skill.tier,
-          band: bandOf(skill.tier),
           category: group.title,
           categoryId: group.id,
         });
