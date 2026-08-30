@@ -291,6 +291,29 @@ public class SiteRenderer(
             .Replace("{{SITE.CANONICAL_BASE}}", (b.GetProperty("canonicalBaseUrl").GetString() ?? "").TrimEnd('/'));
     }
 
+    /// <summary>
+    /// The addressable sheets, in the order the site presents them. Mirrors
+    /// client/src/blueprint/sheetRegistry.js; the cover is left out because it
+    /// is the site root, already listed above.
+    /// </summary>
+    internal static readonly string[] SheetKeys =
+        { "about", "projects", "experience", "skills", "blog", "contact" };
+
+    /// <summary>Sheet keys the admin has switched off. Absent means visible.</summary>
+    internal static HashSet<string> SectionsSwitchedOff(SiteSettings s)
+    {
+        var off = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (s.OperationsJson.ValueKind != JsonValueKind.Object) return off;
+        if (!s.OperationsJson.TryGetProperty("sectionsEnabled", out var sections)
+            || sections.ValueKind != JsonValueKind.Object) return off;
+
+        foreach (var entry in sections.EnumerateObject())
+        {
+            if (entry.Value.ValueKind == JsonValueKind.False) off.Add(entry.Name);
+        }
+        return off;
+    }
+
     private async Task<string> RenderSitemapInternalAsync(SiteSettings s, CancellationToken ct)
     {
         var b = s.BrandingJson;
@@ -308,6 +331,20 @@ public class SiteRenderer(
         urls.AppendLine($"    <xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"{canonical}/\" />");
         urls.AppendLine($"    <xhtml:link rel=\"alternate\" hreflang=\"tr\" href=\"{canonical}/\" />");
         urls.AppendLine("  </url>");
+
+        // Each sheet is its own address, so each is its own entry — otherwise
+        // six pages of content are reachable but undiscoverable. A sheet
+        // switched off in Operations is not offered.
+        var sectionsOff = SectionsSwitchedOff(s);
+        foreach (var sheet in SheetKeys.Where(k => !sectionsOff.Contains(k)))
+        {
+            urls.AppendLine("  <url>");
+            urls.AppendLine($"    <loc>{canonical}/{sheet}</loc>");
+            urls.AppendLine($"    <lastmod>{today}</lastmod>");
+            urls.AppendLine($"    <changefreq>{changefreq}</changefreq>");
+            urls.AppendLine("    <priority>0.8</priority>");
+            urls.AppendLine("  </url>");
+        }
 
         var posts = await db.BlogPosts
             .Where(p => p.IsPublished)

@@ -157,7 +157,7 @@ public static class SiteSettingsEndpoints
         MaintenanceMode: false,
         MaintenanceMessage_tr: "",
         MaintenanceMessage_en: "",
-        SectionsEnabled: new(true, true, true, true, true, true, true),
+        SectionsEnabled: new(),
         Analytics: new(false, "", ""));
     private static SecurityDto EmptySecurity() => new(
         Csp: new(

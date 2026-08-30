@@ -25,7 +25,7 @@
   },
   "branding": {
     "canonicalBaseUrl": "https://furkanpasaoglu.com",
-    "themeColor": "#0ea5e9",
+    "themeColor": "#0a0b0d",
     "faviconUrl": "/favicon.svg",
     "ogImageUrl": "https://furkanpasaoglu.com/og-image.png",
     "ogImageWidth": 1200,
@@ -65,10 +65,7 @@
     "maintenanceMode": false,
     "maintenanceMessage_tr": "Sitede bakım çalışması var. Kısa süre içinde tekrar yayında olacağız.",
     "maintenanceMessage_en": "The site is currently under maintenance. We'll be back shortly.",
-    "sectionsEnabled": {
-      "hero": true, "about": true, "skills": true,
-      "projects": true, "experience": true, "blog": true, "contact": true
-    },
+    "sectionsEnabled": {},
     "analytics": { "enabled": false, "ga4MeasurementId": "", "gtmContainerId": "" }
   },
   "security": {

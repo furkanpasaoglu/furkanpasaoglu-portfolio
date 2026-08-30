@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The sitemap's sheet list is worth testing without making it public API. -->
+    <InternalsVisibleTo Include="Portfolio.Api.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Update="SeedData\**\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="Templates\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

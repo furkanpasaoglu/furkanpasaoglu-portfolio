@@ -67,7 +67,16 @@ public class OperationsValidator : AbstractValidator<OperationsDto>
     {
         RuleFor(x => x.MaintenanceMessage_tr).NotNull().MaximumLength(2000);
         RuleFor(x => x.MaintenanceMessage_en).NotNull().MaximumLength(2000);
-        RuleFor(x => x.SectionsEnabled).NotNull();
+        // Open-keyed on purpose, but not unbounded: the keys come from the
+        // front end's section list, so anything else is a mistake worth
+        // catching before it is stored.
+        RuleFor(x => x.SectionsEnabled)
+            .NotNull()
+            .Must(s => s.Count <= 32)
+            .WithMessage("At most 32 section keys can be stored.")
+            .Must(s => s.Keys.All(k => k.Length is > 0 and <= 32
+                                       && k.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_')))
+            .WithMessage("Section keys may contain letters, digits, - and _ only.");
         RuleFor(x => x.Analytics).NotNull().SetValidator(new AnalyticsValidator());
     }
 }
@@ -167,11 +176,11 @@ public class BrandingValidator : AbstractValidator<BrandingDto>
             .Must(u => u.StartsWith("https://") && Uri.TryCreate(u, UriKind.Absolute, out _))
             .WithMessage("Must be an absolute https:// URL.");
         RuleFor(x => x.ThemeColor).Matches("^#[0-9A-Fa-f]{6}$");
-        RuleFor(x => x.FaviconUrl).NotEmpty().MaximumLength(500);
-        RuleFor(x => x.OgImageUrl).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.FaviconUrl).NotEmpty().MaximumLength(500).HttpUrlOrPath();
+        RuleFor(x => x.OgImageUrl).NotEmpty().MaximumLength(500).HttpUrlOrPath();
         RuleFor(x => x.OgImageWidth).GreaterThan(0).LessThanOrEqualTo(4096);
         RuleFor(x => x.OgImageHeight).GreaterThan(0).LessThanOrEqualTo(4096);
-        RuleFor(x => x.TwitterImageUrl).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.TwitterImageUrl).NotEmpty().MaximumLength(500).HttpUrlOrPath();
         RuleFor(x => x.TwitterCard).Must(v => v is "summary" or "summary_large_image");
         RuleFor(x => x.GoogleSiteVerification).MaximumLength(200);
         RuleFor(x => x.SitemapChangefreq)
@@ -190,7 +199,8 @@ public class SchemaValidator : AbstractValidator<SchemaDto>
         RuleFor(x => x.AddressCountry).NotEmpty().Length(2);
         RuleFor(x => x.DateCreated).Matches("^\\d{4}-\\d{2}-\\d{2}$");
         RuleFor(x => x.SameAs).NotNull();
-        RuleForEach(x => x.SameAs).Must(u => Uri.TryCreate(u, UriKind.Absolute, out _));
+        RuleForEach(x => x.SameAs).Must(UrlRules.IsSafeAbsolute)
+            .WithMessage("sameAs entries must be http:// or https:// URLs.");
         RuleFor(x => x.JobTitle_tr).NotEmpty().MaximumLength(200);
         RuleFor(x => x.JobTitle_en).NotEmpty().MaximumLength(200);
         RuleFor(x => x.PersonDescription_tr).NotEmpty().MaximumLength(2000);

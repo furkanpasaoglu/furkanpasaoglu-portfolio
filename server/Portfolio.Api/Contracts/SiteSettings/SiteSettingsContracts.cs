@@ -50,11 +50,6 @@ public record SchemaDto(
     string AlumniOfName_en
 );
 
-public record SectionsEnabledDto(
-    bool Hero, bool About, bool Skills, bool Projects,
-    bool Experience, bool Blog, bool Contact
-);
-
 public record AnalyticsDto(
     bool Enabled,
     string Ga4MeasurementId,
@@ -65,7 +60,10 @@ public record OperationsDto(
     bool MaintenanceMode,
     string MaintenanceMessage_tr,
     string MaintenanceMessage_en,
-    SectionsEnabledDto SectionsEnabled,
+    // Keyed by whatever the front end calls its sections, so the public site
+    // can be renamed or restructured without a contract change. A key that is
+    // absent counts as visible.
+    Dictionary<string, bool> SectionsEnabled,
     AnalyticsDto Analytics
 );
 
