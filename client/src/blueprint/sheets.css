@@ -891,3 +891,13 @@
 }
 .bp-doc-note .rt-quote > .rt-p { font-size: inherit; color: inherit; margin: 0; }
 
+
+/* The Künye sheet opens on a lede, so the document's first paragraph keeps
+   the larger register the hand-written markup used to give it. */
+.bp-doc-record .rt-p:first-child {
+  font-size: clamp(14px, 1.5vw, 17px);
+  line-height: 1.62;
+  color: var(--bp-text);
+  max-width: 62ch;
+  margin-bottom: 18px;
+}

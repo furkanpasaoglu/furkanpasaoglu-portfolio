@@ -931,3 +931,38 @@ body.fp-host::before { display: none; }
 }
 
 .fp-term-in { color: var(--bp-amber-strong); }
+
+/* ── Key/value row editor ──────────────────────────────────────────────
+   The Künye sheet's specification column, edited as an ordered list. */
+.fp-kv { display: flex; flex-direction: column; gap: 6px; }
+
+.fp-kv-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 30%) 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.fp-kv-ops { display: flex; gap: 2px; }
+
+.fp-kv-op {
+  border: 1px solid var(--bp-line-hi);
+  background: var(--bp-panel);
+  color: var(--bp-dim);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0 8px;
+  height: 32px;
+  cursor: pointer;
+}
+.fp-kv-op:hover:not(:disabled) { border-color: var(--bp-amber); color: var(--bp-text-hi); }
+.fp-kv-op:disabled { opacity: 0.35; cursor: default; }
+.fp-kv-x:hover:not(:disabled) { border-color: var(--bp-fault); color: var(--bp-fault); }
+
+.fp-kv-add { align-self: flex-start; margin-top: 2px; }
+
+@media (max-width: 640px) {
+  .fp-kv-row { grid-template-columns: 1fr; }
+  .fp-kv-ops { justify-content: flex-end; }
+}

@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../../api/adminApi';
-import { Button, Field, Input, Textarea } from '../../ui';
+import { Button, Field, Input, RichEditor, Textarea } from '../../ui';
 import { useToast } from '../../ui/hooks';
-import { SITE_TEXT, SITE_TEXT_FIELDS } from '../../../blueprint/siteText';
+import { isEmptyDoc, toDoc } from '../../../utils/richDocModel';
+import {
+  LEGACY_ABOUT_PROPS, SITE_TEXT, SITE_TEXT_FIELDS, aboutText, cleanRows, specRows,
+} from '../../../blueprint/siteText';
 
 /**
- * The prose the public site opens with: the role under the name, the cover's
- * lede, and the three paragraphs on the Künye sheet.
+ * The copy the public site opens with: the role under the name, the cover's
+ * lede, and the Künye sheet's prose and specification rows.
  *
  * These live in the `hero` and `about` translation sections, which also hold
  * keys this panel does not show, so each section is merged rather than
@@ -39,7 +42,16 @@ export default function SiteTextPanel() {
   useEffect(() => {
     if (!data) return;
     const read = (langKey) => Object.fromEntries(
-      SITE_TEXT_FIELDS.map((f) => [f.key, data[f.section]?.[langKey]?.[f.prop] ?? '']),
+      SITE_TEXT_FIELDS.map((f) => {
+        const section = data[f.section]?.[langKey] ?? {};
+        switch (f.kind) {
+          // Reads the paragraphs a pre-document record still holds, so the
+          // first save here converts them instead of stranding them.
+          case 'rich': return [f.key, aboutText(section) ?? ''];
+          case 'spec': return [f.key, specRows(section) ?? []];
+          default: return [f.key, section[f.prop] ?? ''];
+        }
+      }),
     );
     setDraft({ tr: read('dataTr'), en: read('dataEn') });
   }, [data]);
@@ -48,15 +60,23 @@ export default function SiteTextPanel() {
     mutationFn: async () => {
       for (const section of SECTIONS) {
         const fields = SITE_TEXT_FIELDS.filter((f) => f.section === section);
+
         const merge = (langKey, lang) => {
           const next = { ...(data?.[section]?.[langKey] ?? {}) };
+
           for (const f of fields) {
-            const value = draft[lang][f.key]?.trim();
-            if (value) next[f.prop] = value;
-            else delete next[f.prop];
+            const stored = write(f, draft[lang][f.key]);
+            if (stored === null) delete next[f.prop];
+            else next[f.prop] = stored;
+
+            // The three paragraphs the document replaced go out with it, so a
+            // converted record is not left holding two sources of truth.
+            if (f.kind === 'rich') for (const p of LEGACY_ABOUT_PROPS) delete next[p];
           }
+
           return next;
         };
+
         await adminApi.upsertTranslation(section, {
           dataTr: merge('dataTr', 'tr'),
           dataEn: merge('dataEn', 'en'),
@@ -95,26 +115,99 @@ export default function SiteTextPanel() {
             <button type="button" className={tab === 'en' ? 'fp-tab fp-tab-on' : 'fp-tab'} onClick={() => setTab('en')}>English</button>
           </div>
 
-          {SITE_TEXT_FIELDS.map(({ key, label, hint }) => (
-            <Field key={key} label={label} hint={hint}>
-              {key === 'role' ? (
-                <Input
-                  value={draft[tab]?.[key] ?? ''}
-                  placeholder={SITE_TEXT[tab][key]}
-                  onChange={(e) => set(key, e.target.value)}
-                />
-              ) : (
-                <Textarea
-                  rows={4}
-                  value={draft[tab]?.[key] ?? ''}
-                  placeholder={SITE_TEXT[tab][key]}
-                  onChange={(e) => set(key, e.target.value)}
-                />
-              )}
+          {SITE_TEXT_FIELDS.map((f) => (
+            <Field key={f.key} label={f.label} hint={f.hint}>
+              <Editor field={f} lang={tab} value={draft[tab]?.[f.key]} onChange={(v) => set(f.key, v)} />
             </Field>
           ))}
         </>
       )}
     </section>
+  );
+}
+
+/** The stored form of a draft value, or null to drop the key entirely. */
+function write(field, value) {
+  switch (field.kind) {
+    case 'rich':
+      return value && !isEmptyDoc(toDoc(value)) ? value : null;
+    case 'spec': {
+      const rows = cleanRows(value);
+      return rows.length ? rows : null;
+    }
+    default:
+      return value?.trim() || null;
+  }
+}
+
+function Editor({ field, lang, value, onChange }) {
+  switch (field.kind) {
+    case 'rich':
+      return <RichEditor value={value} onChange={onChange} />;
+    case 'spec':
+      return <SpecRows value={value ?? []} onChange={onChange} />;
+    case 'text':
+      return (
+        <Textarea
+          rows={4}
+          value={value ?? ''}
+          placeholder={SITE_TEXT[lang][field.key]}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      );
+    default:
+      return (
+        <Input
+          value={value ?? ''}
+          placeholder={SITE_TEXT[lang][field.key]}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      );
+  }
+}
+
+/**
+ * The Künye sheet's specification column, as an ordered list of label/value
+ * pairs. Rows are positional, so they are keyed and reordered by index.
+ */
+function SpecRows({ value, onChange }) {
+  const patch = (i, key, v) => onChange(value.map((r, j) => (j === i ? { ...r, [key]: v } : r)));
+
+  const move = (i, by) => {
+    const to = i + by;
+    if (to < 0 || to >= value.length) return;
+    const next = [...value];
+    [next[i], next[to]] = [next[to], next[i]];
+    onChange(next);
+  };
+
+  return (
+    <div className="fp-kv">
+      {value.map((row, i) => (
+        <div className="fp-kv-row" key={i}>
+          <Input
+            className="fp-kv-k"
+            placeholder="Etiket"
+            value={row.k}
+            onChange={(e) => patch(i, 'k', e.target.value)}
+          />
+          <Input
+            className="fp-kv-v"
+            placeholder="Değer"
+            value={row.v}
+            onChange={(e) => patch(i, 'v', e.target.value)}
+          />
+          <div className="fp-kv-ops">
+            <button type="button" className="fp-kv-op" title="Yukarı taşı" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
+            <button type="button" className="fp-kv-op" title="Aşağı taşı" disabled={i === value.length - 1} onClick={() => move(i, 1)}>↓</button>
+            <button type="button" className="fp-kv-op fp-kv-x" title="Satırı sil" onClick={() => onChange(value.filter((_, j) => j !== i))}>✕</button>
+          </div>
+        </div>
+      ))}
+
+      <Button className="fp-kv-add" onClick={() => onChange([...value, { k: '', v: '' }])}>
+        Satır ekle
+      </Button>
+    </div>
   );
 }
