@@ -10,8 +10,10 @@ export default function AboutSheet({ lang, t, personal }) {
   const tr = lang === 'tr';
   const { data: experience } = usePublicExperience(lang);
 
+  // The most recent role, which is not necessarily a current one — a period
+  // can have an end date. The label says "most recent" for that reason.
   const roles = (experience ?? []).filter((e) => !e.isEducation);
-  const current = roles[0];
+  const latest = roles[0];
 
   return (
     <>
@@ -28,11 +30,11 @@ export default function AboutSheet({ lang, t, personal }) {
         <div>
           <div className="bp-eyebrow">{tr ? 'Özellikler' : 'Specification'}</div>
           <div className="bp-spec">
-            {current && (
+            {latest && (
               <>
-                <Row k={tr ? 'Görev' : 'Role'} v={current.title} />
-                <Row k={tr ? 'Kurum' : 'Organisation'} v={current.company} />
-                <Row k={tr ? 'Dönem' : 'Period'} v={current.period} />
+                <Row k={tr ? 'Son görev' : 'Most recent role'} v={latest.title} />
+                <Row k={tr ? 'Kurum' : 'Organisation'} v={latest.company} />
+                <Row k={tr ? 'Dönem' : 'Period'} v={latest.period} />
               </>
             )}
             <Row k={tr ? 'Konum' : 'Location'} v={personal?.location ?? 'İstanbul, TR'} />
